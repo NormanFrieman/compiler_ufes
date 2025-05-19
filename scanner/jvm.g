@@ -22,6 +22,7 @@ TRUE       : 'true' ;
 FALSE      : 'false' ;
 
 ASSIGN     : ':=' ;
+ASSIGN_VAR : '=' ;
 EQUAL      : '==' ;
 NOT_EQUAL  : '!=' ;
 LESS       : '<' ;
