@@ -3,16 +3,13 @@ lexer grammar jvm;
 WS         : [ \t\r\n]+       -> skip ;
 COMMENTS   : '//' ~[\r\n]*    -> skip ;
 
-DIGITS         : [0-9]+ ;
-ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
-STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
-CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
-
 PACKAGE    : 'package' ;
 IMPORT     : 'import' ;
 FUNCTION   : 'func' ;
 VAR        : 'var' ;
 INT        : 'int' ;
+FLOAT32    : 'float32' ;
+FLOAT64    : 'float64' ;
 STRING     : 'string' ;
 FOR        : 'for' ;
 RANGE      : 'range' ;
@@ -52,3 +49,8 @@ PAREN_LEFT       : '(' ;
 PAREN_RIGHT      : ')' ;
 
 UNDERSCORE       : '_' ;
+
+DIGITS         : [0-9]+ ;
+ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
+STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
+CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
