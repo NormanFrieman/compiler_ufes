@@ -1,11 +1,11 @@
 #!/bin/bash
 
-ROOT=$(pwd)
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANTLR_PATH=$ROOT/tools/antlr-4.13.2-complete.jar
 CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 
 GRAMMAR_NAME=jvm
-GEN_PATH=out
+GEN_PATH=$ROOT/out
 
 IN=$ROOT/in
 TEST=$ROOT/test
