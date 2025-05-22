@@ -6,7 +6,7 @@ COMMENTS   : '//' ~[\r\n]*    -> skip ;
 DIGITS         : [0-9]+ ;
 ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
 STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
-CHAR_VALUE     : ''' (~["\\] | '\\' .)* ''' ;
+CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
 
 PACKAGE    : 'package' ;
 IMPORT     : 'import' ;

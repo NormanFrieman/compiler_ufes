@@ -1,6 +1,3 @@
-line 18:37 token recognition error at: '''
-line 18:38 token recognition error at: '\'
-line 18:40 token recognition error at: '''
 [@0,0:6='package',<ID>,1:0]
 [@1,8:11='main',<ID>,1:8]
 [@2,16:21='import',<ID>,3:0]
@@ -45,7 +42,7 @@ line 18:40 token recognition error at: '''
 [@41,308:308='.',<'.'>,18:25]
 [@42,309:318='ReadString',<ID>,18:26]
 [@43,319:319='(',<'('>,18:36]
-[@44,322:322='n',<ID>,18:39]
+[@44,320:323=''\n'',<CHAR_VALUE>,18:37]
 [@45,324:324=')',<')'>,18:41]
 [@46,335:338='text',<ID>,19:8]
 [@47,340:340='=',<'='>,19:13]
