@@ -42,6 +42,7 @@ DOT              : '.' ;
 COMMA            : ',' ;
 SEMICOLON        : ';' ;
 COLON            : ':' ;
+APOSTROPHE       : ''' ;
 
 BRACE_LEFT       : '{' ;
 BRACE_RIGHT      : '}' ;
