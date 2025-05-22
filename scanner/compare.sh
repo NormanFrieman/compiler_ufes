@@ -17,8 +17,8 @@ for infile in `ls $IN/*.go`; do
     outfile=$TEST/${name}.txt
     echo Running $base
     if java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig $GRAMMAR_NAME tokens -tokens $infile 2>&1 | diff -w $outfile -; then
-        echo "Deu bom"
+        echo $base completed
     else
-        echo "DEU RUIM"
+        exit 1
     fi
 done
