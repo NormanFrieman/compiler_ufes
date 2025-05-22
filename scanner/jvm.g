@@ -51,8 +51,15 @@ PAREN_RIGHT      : ')' ;
 
 UNDERSCORE       : '_' ;
 
-ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
-STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
-CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
-INT_VALUE      : [0-9]+ ;
-FLOAT_VALUE    : INT_VALUE '.' INT_VALUE ;
+ID                      : [a-zA-Z_][a-zA-Z0-9_]* ;
+STRING_VALUE            : '"' (~["\\] | '\\' .)* '"' ;
+CHAR_VALUE              : '\'' (~['\\] | '\\' .)* '\'' ;
+INT_VALUE               : [0-9]+ ;
+NEGATIVE_INT_VALUE      : '-' [0-9]+ ;
+FLOAT_VALUE             : INT_VALUE '.' INT_VALUE ;
+NEGATIVE_FLOAT_VALUE    : '-' FLOAT_VALUE ;
+
+// uint int8 int16 ...
+// unicode
+// regras de escape
+// variante valores numericos
