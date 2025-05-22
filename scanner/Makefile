@@ -2,7 +2,7 @@ JAVAC=javac
 
 JAVA=java
 
-ROOT=/home-temp/aluno/Documents/trab/scanner
+ROOT:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 ANTLR_PATH=${ROOT}/tools/antlr-4.13.2-complete.jar
 
