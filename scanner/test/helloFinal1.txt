@@ -1,6 +1,3 @@
-line 23:37 token recognition error at: '''
-line 23:38 token recognition error at: '\'
-line 23:40 token recognition error at: '''
 [@0,0:6='package',<ID>,1:0]
 [@1,8:11='main',<ID>,1:8]
 [@2,16:21='import',<ID>,3:0]
