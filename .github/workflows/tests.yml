@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  Scanner Validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Give permissions
+        run: chmod +x validar.sh
+
+      - name: Run test script
+        run: ./validar.sh
