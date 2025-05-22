@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Give permissions
-        run: chmod +x validar.sh
+        run: chmod +x compare.sh
 
       - name: Run test script
-        run: ./validar.sh
+        run: ./compare.sh
