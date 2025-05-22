@@ -54,5 +54,5 @@ UNDERSCORE       : '_' ;
 ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
 STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
 CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
-INT_VALUE   : [0-9]+ ;
-FLOAT_VALUE : INT_VALUE '.' INT_VALUE ;
+INT_VALUE      : [0-9]+ ;
+FLOAT_VALUE    : INT_VALUE '.' INT_VALUE ;
