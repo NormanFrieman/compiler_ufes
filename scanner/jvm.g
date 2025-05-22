@@ -8,6 +8,7 @@ IMPORT     : 'import' ;
 FUNCTION   : 'func' ;
 VAR        : 'var' ;
 INT        : 'int' ;
+BOOL       : 'bool' ;
 FLOAT32    : 'float32' ;
 FLOAT64    : 'float64' ;
 STRING     : 'string' ;
@@ -50,7 +51,8 @@ PAREN_RIGHT      : ')' ;
 
 UNDERSCORE       : '_' ;
 
-DIGITS         : [0-9]+ ;
 ID             : [a-zA-Z_][a-zA-Z0-9_]* ;
 STRING_VALUE   : '"' (~["\\] | '\\' .)* '"' ;
 CHAR_VALUE     : '\'' (~["\\] | '\\' .)* '\'' ;
+INT_VALUE   : [0-9]+ ;
+FLOAT_VALUE : INT_VALUE '.' INT_VALUE ;
