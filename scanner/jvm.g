@@ -3,20 +3,54 @@ lexer grammar jvm;
 WS         : [ \t\r\n]+       -> skip ;
 COMMENTS   : '//' ~[\r\n]*    -> skip ;
 
+INT_DEC        : [0-9]+ ;
+INT_HEX        : '0x' [0-9a-fA-F]+ ;
+INT_OCT        : '0o' [0-7]+ ;
+INT_BIN        : '0b' [01]+ ;
+
+FLOAT_LITERAL  : [0-9]+ '.' [0-9]* ([eE][+-]?[0-9]+)? |
+                 '.' [0-9]+ ([eE][+-]?[0-9]+)?        |
+                 [0-9]+ [eE] [+-]?[0-9]+              ;
+
+ID                      : [a-zA-Z_][a-zA-Z0-9_]* |
+                          [\p{L}_][\p{L}\p{N}_]* ;
+STRING_VALUE            : '"' (~["\\] | '\\' .)* '"' |
+                          '"' ( ESC_SEQ | ~["\\\r\n] )* '"' ;
+
+fragment ESC_SEQ
+    : '\\' [btnr"\\]         // \b \t \n \r \" \\
+    | '\\u' HEX HEX HEX HEX  // Unicode escape
+    ;
+
+fragment HEX : [0-9a-fA-F] ;
+
+
+NEGATIVE_FLOAT_LITERAL  : '-' FLOAT_LITERAL ;
+
+CHAR_VALUE              : '\'' (~['\\] | '\\' .)* '\'' ;
+NEGATIVE_INT_VALUE      : '-' [0-9]+ ;
+
+TYPE_UINT     : 'uint' ;
+TYPE_INT      : 'int' ;
+TYPE_INT8     : 'int8' ;
+TYPE_INT16    : 'int16' ;
+TYPE_INT32    : 'int32' ;
+TYPE_INT64    : 'int64' ;
+TYPE_FLOAT32  : 'float32' ;
+TYPE_FLOAT64  : 'float64' ;
+TYPE_STRING   : 'string' ;
+TYPE_BOOL     : 'bool' ;
+
 PACKAGE    : 'package' ;
 IMPORT     : 'import' ;
 FUNCTION   : 'func' ;
 VAR        : 'var' ;
-INT        : 'int' ;
-BOOL       : 'bool' ;
-FLOAT32    : 'float32' ;
-FLOAT64    : 'float64' ;
-STRING     : 'string' ;
+CONST      : 'const' ;
+RETURN     : 'return' ;
 FOR        : 'for' ;
 RANGE      : 'range' ;
 IF         : 'if' ;
 ELSE       : 'else' ;
-RETURN     : 'return' ;
 TRUE       : 'true' ;
 FALSE      : 'false' ;
 
@@ -51,13 +85,6 @@ PAREN_RIGHT      : ')' ;
 
 UNDERSCORE       : '_' ;
 
-ID                      : [a-zA-Z_][a-zA-Z0-9_]* ;
-STRING_VALUE            : '"' (~["\\] | '\\' .)* '"' ;
-CHAR_VALUE              : '\'' (~['\\] | '\\' .)* '\'' ;
-INT_VALUE               : [0-9]+ ;
-NEGATIVE_INT_VALUE      : '-' [0-9]+ ;
-FLOAT_VALUE             : INT_VALUE '.' INT_VALUE ;
-NEGATIVE_FLOAT_VALUE    : '-' FLOAT_VALUE ;
 
 // uint int8 int16 ...
 // unicode
