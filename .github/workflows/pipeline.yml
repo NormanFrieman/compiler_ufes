@@ -15,10 +15,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Compile Scanner
-        run: make -C scanner
+        run: make
         
       - name: Give permissions
-        run: chmod +x scanner/compare.sh
+        run: chmod +x ./tests/test_scanner.sh
 
-      - name: Run test script
-        run: ./scanner/compare.sh
+      - name: Scanner Tests
+        run: ./tests/test_scanner.sh
