@@ -18,7 +18,7 @@ LEXER=${ROOT}/${GRAMMAR_NAME}Lexer.g
 
 PARSER=${ROOT}/${GRAMMAR_NAME}Parser.g
 
-IN=${ROOT}/casetests
+IN=${ROOT}/tests/casetests
 
 GEN_PATH=generated
 
@@ -35,7 +35,7 @@ lexer:
 	cd ${GEN_PATH} && ${GRUN} ${GRAMMAR_NAME} tokens -tokens ${IN}/${FILE}
 
 parser:
-	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE)
+	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE) -gui
 
 clean:
 	@rm -rf ${GEN_PATH}
