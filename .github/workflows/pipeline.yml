@@ -18,4 +18,9 @@ jobs:
         run: chmod +x tests/test_scanner.sh
 
       - name: Scanner Tests
-        run: make && cd tests && ./test_scanner.sh
+        run: |
+          echo "Compile scanner"
+          make
+          cd tests
+          echo "Run tests"
+          ./test_scanner.sh
