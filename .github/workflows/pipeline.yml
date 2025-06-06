@@ -23,8 +23,5 @@ jobs:
       - name: Give permissions
         run: chmod +x tests/test_scanner.sh
 
-      - name: Prepare tests
-        run: cd tests
-
       - name: Scanner Tests
-        run: ./test_scanner.sh
+        run: cd tests && ./test_scanner.sh
