@@ -14,14 +14,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Compile Scanner
-        run: make
-      
-      - name: Enter paste tests
-        run: cd tests
-      
       - name: Give permissions
         run: chmod +x tests/test_scanner.sh
 
       - name: Scanner Tests
-        run: cd tests && ./test_scanner.sh
+        run: make && cd tests && ./test_scanner.sh
