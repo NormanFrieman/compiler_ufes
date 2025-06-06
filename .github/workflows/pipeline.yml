@@ -13,15 +13,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Create paste generated
-        run: mkdir generated
       
       - name: Compile Scanner
         run: make
-        
+      
+      - name: Enter paste tests
+        run: cd tests
+      
       - name: Give permissions
         run: chmod +x tests/test_scanner.sh
 
       - name: Scanner Tests
-        run: tests/test_scanner.sh
+        run: ./tests/test_scanner.sh
