@@ -41,6 +41,7 @@ done
 
 if [ $errors -gt 0 ]; then
     echo -e ${RED}${errors} errors${NC}
+    exit 1
 else
     echo -e ${GREEN}All tests passed${NC}
 fi
