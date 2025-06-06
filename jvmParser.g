@@ -17,7 +17,7 @@ init:
 stmt_sect:
     function_declaration
     BRACE_LEFT
-    function_call
+    (function_call | var_declaration)
     BRACE_RIGHT
 ;
 
@@ -49,6 +49,7 @@ type:
     | TYPE_FLOAT64
     | TYPE_STRING
     | TYPE_BOOL
+    | BRACKET_LEFT INT_DEC BRACKET_RIGHT type
 ;
 
 value:
