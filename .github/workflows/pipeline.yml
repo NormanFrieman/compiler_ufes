@@ -14,8 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Compile Scanner
+      - name: Create paste generated
         run: mkdir generated
+      
+      - name: Compile Scanner
         run: make
         
       - name: Give permissions
