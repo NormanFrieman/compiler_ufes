@@ -21,7 +21,7 @@ errors=0
 verify=$(ls $IN/*go)
 if [ $? -ne 0 ]; then
     echo -e ${RED}No such file or directory${NC}
-  exit 0
+  exit 1
 fi
 
 # Checks that the terminal output is the same as the expected output
