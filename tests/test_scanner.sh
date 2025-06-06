@@ -7,7 +7,7 @@ CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 GRAMMAR_NAME=jvmLexer
 GEN_PATH=$ROOT/generated
 
-IN=$ROOT/tests/casetest
+IN=$ROOT/tests/casetests
 TEST=$ROOT/tests/expected_scanner
 
 GREEN='\e[32m'

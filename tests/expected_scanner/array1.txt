@@ -1,4 +1,4 @@
-[@0,0:6='package',<'package'>,1:0]
+[@0,0:6='package',<'package'>,1:0]aaa
 [@1,8:11='main',<ID>,1:8]
 [@2,16:21='import',<'import'>,3:0]
 [@3,23:27='"fmt"',<STRING_VALUE>,3:7]
