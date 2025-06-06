@@ -21,7 +21,7 @@ jobs:
         run: make
         
       - name: Give permissions
-        run: chmod +x /tests/test_scanner.sh
+        run: chmod +x tests/test_scanner.sh
 
       - name: Scanner Tests
-        run: /tests/test_scanner.sh
+        run: tests/test_scanner.sh
