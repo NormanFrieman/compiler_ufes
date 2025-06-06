@@ -16,6 +16,15 @@ NC='\e[0m'
 
 cd $GEN_PATH
 errors=0
+
+# Checks whether it is possible to access the entry codes
+verify=$(ls $IN/*go)
+if [ $? -ne 0 ]; then
+    echo -e ${RED}No such file or directory${NC}
+  exit 0
+fi
+
+# Checks that the terminal output is the same as the expected output
 for infile in `ls $IN/*.go`; do
     echo ${infile}
     base=$(basename $infile)
@@ -27,10 +36,9 @@ for infile in `ls $IN/*.go`; do
     else
         echo -e $base ${RED}error${NC}
         errors=$((errors+1))
-        # exit 1    
     fi
 done
-    
+
 if [ $errors -gt 0 ]; then
     echo -e ${RED}${errors} errors${NC}
 else
