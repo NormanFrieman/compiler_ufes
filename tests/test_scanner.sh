@@ -7,7 +7,7 @@ CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 GRAMMAR_NAME=jvmLexer
 GEN_PATH=$ROOT/generated
 
-IN=$ROOT/tests/casetests
+IN=$ROOT/tests/casetest
 TEST=$ROOT/tests/expected_scanner
 
 GREEN='\e[32m'
@@ -17,6 +17,7 @@ NC='\e[0m'
 cd $GEN_PATH
 errors=0
 for infile in `ls $IN/*.go`; do
+    echo ${infile}
     base=$(basename $infile)
     name="${base//.go/}"
     outfile=$TEST/${name}.txt
@@ -29,7 +30,7 @@ for infile in `ls $IN/*.go`; do
         # exit 1    
     fi
 done
-
+    
 if [ $errors -gt 0 ]; then
     echo -e ${RED}${errors} errors${NC}
 else
