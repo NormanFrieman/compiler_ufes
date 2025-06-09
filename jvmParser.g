@@ -65,8 +65,8 @@ var_declaration_composite:
 composite:
     INT_DEC
     | STRING_VALUE
-    | BRACE_LEFT (type)? BRACE_RIGHT type PAREN_LEFT value PAREN_RIGHT
-    | BRACE_LEFT (type)? BRACE_RIGHT type PAREN_LEFT value COLON value (COMMA value COLON value)? PAREN_RIGHT
+    | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value BRACE_RIGHT
+    | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value COLON value (COMMA value COLON value)? BRACE_RIGHT
 ;
 
 compare:
