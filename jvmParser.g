@@ -54,4 +54,45 @@ type:
 
 value:
     STRING_VALUE
+    | ID
+    | value (COMMA value)?
+;
+
+var_declaration_composite:
+    ID ASSIGN composite
+;
+
+composite:
+    INT_DEC
+    | STRING_VALUE
+    | BRACE_LEFT (type)? BRACE_RIGHT type PAREN_LEFT value PAREN_RIGHT
+    | BRACE_LEFT (type)? BRACE_RIGHT type PAREN_LEFT value COLON value (COMMA value COLON value)? PAREN_RIGHT
+;
+
+compare:
+    EQUAL
+    | NOT_EQUAL
+    | LESS
+    | GREATER 
+    | LESS_EQ  
+    | GREATER_EQ
+;
+
+value_move:
+    PLUS PLUS
+    | MINUS MINUS
+    | PLUS INT_DEC
+    | MINUS INT_DEC
+;
+
+loop_call:
+    FOR var_declaration_composite SEMICOLON ID compare INT_DEC SEMICOLON ID value_move expres
+    | var_declaration_composite FOR ID compare INT_DEC expres
+    | FOR expres
+    | var_declaration_composite FOR ID COMMA ID ASSIGN RANGE ID expres
+    | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expres
+;
+
+expres:
+
 ;
