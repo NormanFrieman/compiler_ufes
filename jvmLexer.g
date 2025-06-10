@@ -26,6 +26,7 @@ IF         : 'if' ;
 ELSE       : 'else' ;
 TRUE       : 'true' ;
 FALSE      : 'false' ;
+MAP        : 'map' ;
 
 ASSIGN     : ':=' ;
 ASSIGN_VAR : '=' ;

@@ -38,6 +38,7 @@ type:
     | TYPE_STRING
     | TYPE_BOOL
     | type_array
+    | type_map
 ;
 
 type_array:
@@ -45,11 +46,17 @@ type_array:
     | BRACKET_LEFT DOT DOT DOT BRACKET_RIGHT type
 ;
 
+type_map:
+    MAP BRACKET_LEFT type BRACKET_RIGHT type
+;
+
 value:
     STRING_VALUE
     | INT_DEC
+    | FLOAT_LITERAL
     | ID
     | value_array
+    | value_map
     // | value (COMMA value)?
 ;
 
@@ -57,6 +64,11 @@ value_array:
     type_array BRACE_LEFT ( INT_DEC (COMMA INT_DEC)* )? BRACE_RIGHT
     | ID BRACKET_LEFT INT_DEC BRACKET_RIGHT
     | ID BRACKET_LEFT ID BRACKET_RIGHT
+    | ID BRACKET_LEFT value BRACKET_RIGHT
+;
+
+value_map:
+    type_map BRACE_LEFT ( value COLON value (COMMA value COLON value)* (COMMA)? )? BRACE_RIGHT
 ;
 
 value_move:
@@ -103,6 +115,7 @@ var_declaration:
 var_assign:
     ID ASSIGN value
     | ID ASSIGN_VAR function_call
+    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value
 ;
 
 // LOOP
