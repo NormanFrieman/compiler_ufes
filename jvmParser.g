@@ -51,7 +51,7 @@ type_map:
 ;
 
 ints:
-    | INT_DEC
+    INT_DEC
     | INT_HEX
     | INT_OCT
     | INT_BIN
