@@ -33,7 +33,8 @@ expression:
     | instance_struct
     | ID value_move
     | if_stmt
-    | BREAK
+    | goto
+    | break
     | CONTINUE)*
     (ret)?
     BRACE_RIGHT
@@ -173,7 +174,7 @@ param_value:
 ;
 
 param_declaration:
-    ID type
+    ID (type)?
 ;
 
 function_declaration:
@@ -202,6 +203,15 @@ var_assign:
     | ID BRACKET_LEFT value BRACKET_RIGHT value_move
 ;
 
+// GO TO
+goto:
+    ID COLON expression
+;
+
+break:
+    BREAK (ID)?
+;
+
 // LOOP
 loop_call:
     FOR var_assign SEMICOLON ID compare ints SEMICOLON ID value_move expression
@@ -219,30 +229,6 @@ if_condicional:
 
 if_stmt:
     IF if_condicional (logical if_condicional)* expression
+    | IF PAREN_LEFT if_condicional (logical if_condicional)* PAREN_RIGHT expression
     | if_stmt ELSE (if_stmt | expression)
 ;
-
-
-
-
-
-
-
-
-
-
-
-// var_declaration_composite:
-//     ID ASSIGN composite
-// ;
-
-// composite:
-//     INT_DEC
-//     | STRING_VALUE
-//     | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value BRACE_RIGHT
-//     | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value COLON value (COMMA value COLON value)? BRACE_RIGHT
-// ;
-
-// expres:
-
-// ;
