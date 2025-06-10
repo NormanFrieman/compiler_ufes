@@ -16,28 +16,16 @@ init:
 
 stmt_sect:
     function_declaration
+    expression
+;
+
+expression:
     BRACE_LEFT
-    (function_call | var_declaration)
+    (function_call | var_declaration | var_assign | loop_call)*
     BRACE_RIGHT
 ;
 
-var_declaration:
-    VAR ID type
-;
-
-param_declaration:
-    ID type
-;
-
-function_declaration:
-    FUNCTION ID PAREN_LEFT (param_declaration (COMMA param_declaration)*)? PAREN_RIGHT type?
-;
-
-function_call:
-    ID PAREN_LEFT value? PAREN_RIGHT
-    | ID (DOT function_call)+
-;
-
+// GENERAL
 type:
     TYPE_UINT
     | TYPE_INT
@@ -49,24 +37,33 @@ type:
     | TYPE_FLOAT64
     | TYPE_STRING
     | TYPE_BOOL
-    | BRACKET_LEFT INT_DEC BRACKET_RIGHT type
+    | type_array
+;
+
+type_array:
+    BRACKET_LEFT (INT_DEC)? BRACKET_RIGHT type
+    | BRACKET_LEFT DOT DOT DOT BRACKET_RIGHT type
 ;
 
 value:
     STRING_VALUE
+    | INT_DEC
     | ID
-    | value (COMMA value)?
+    | value_array
+    // | value (COMMA value)?
 ;
 
-var_declaration_composite:
-    ID ASSIGN composite
+value_array:
+    type_array BRACE_LEFT ( INT_DEC (COMMA INT_DEC)* )? BRACE_RIGHT
+    | ID BRACKET_LEFT INT_DEC BRACKET_RIGHT
+    | ID BRACKET_LEFT ID BRACKET_RIGHT
 ;
 
-composite:
-    INT_DEC
-    | STRING_VALUE
-    | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value BRACE_RIGHT
-    | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value COLON value (COMMA value COLON value)? BRACE_RIGHT
+value_move:
+    PLUS PLUS
+    | MINUS MINUS
+    | PLUS INT_DEC
+    | MINUS INT_DEC
 ;
 
 compare:
@@ -78,21 +75,70 @@ compare:
     | GREATER_EQ
 ;
 
-value_move:
-    PLUS PLUS
-    | MINUS MINUS
-    | PLUS INT_DEC
-    | MINUS INT_DEC
+// FUNCTIONS
+param_value:
+    value
+    | function_call
 ;
 
+param_declaration:
+    ID type
+;
+
+function_declaration:
+    FUNCTION ID PAREN_LEFT (param_declaration (COMMA param_declaration)*)? PAREN_RIGHT type?
+;
+
+function_call:
+    ID PAREN_LEFT (param_value (COMMA param_value)*)* PAREN_RIGHT
+    | ID (DOT function_call)+
+;
+
+// VARIABLES
+var_declaration:
+    VAR ID type
+    | var_declaration ASSIGN_VAR value
+;
+
+var_assign:
+    ID ASSIGN value
+    | ID ASSIGN_VAR function_call
+;
+
+// LOOP
 loop_call:
-    FOR var_declaration_composite SEMICOLON ID compare INT_DEC SEMICOLON ID value_move expres
-    | var_declaration_composite FOR ID compare INT_DEC expres
-    | FOR expres
-    | var_declaration_composite FOR ID COMMA ID ASSIGN RANGE ID expres
-    | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expres
+    FOR var_assign SEMICOLON ID compare INT_DEC SEMICOLON ID value_move expression
+    | FOR var_assign SEMICOLON ID compare function_call SEMICOLON ID value_move expression
+    | FOR ID (COMMA ID)* ASSIGN RANGE ID expression
+    // | var_declaration_composite FOR ID compare INT_DEC expres
+    // | FOR expres
+    // | var_declaration_composite FOR ID COMMA ID ASSIGN RANGE ID expres
+    // | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expres
 ;
 
-expres:
 
-;
+
+
+
+
+
+
+
+
+
+
+
+// var_declaration_composite:
+//     ID ASSIGN composite
+// ;
+
+// composite:
+//     INT_DEC
+//     | STRING_VALUE
+//     | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value BRACE_RIGHT
+//     | BRACKET_LEFT (type)? BRACKET_RIGHT type BRACE_LEFT value COLON value (COMMA value COLON value)? BRACE_RIGHT
+// ;
+
+// expres:
+
+// ;

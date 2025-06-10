@@ -35,6 +35,9 @@ lexer:
 	cd ${GEN_PATH} && ${GRUN} ${GRAMMAR_NAME} tokens -tokens ${IN}/${FILE}
 
 parser:
+	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE)
+
+parserGui:
 	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE) -gui
 
 clean:
