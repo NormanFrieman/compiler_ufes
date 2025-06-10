@@ -27,6 +27,11 @@ ELSE       : 'else' ;
 TRUE       : 'true' ;
 FALSE      : 'false' ;
 MAP        : 'map' ;
+TYPE       : 'type' ;
+STRUCT     : 'struct' ;
+BREAK      : 'break' ;
+CONTINUE   : 'continue' ;
+NULL       : 'nil' ;
 
 ASSIGN     : ':=' ;
 ASSIGN_VAR : '=' ;

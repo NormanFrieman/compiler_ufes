@@ -9,24 +9,38 @@ program:
     stmt_sect
 ;
 
+imports:
+    IMPORT STRING_VALUE
+    | IMPORT PAREN_LEFT (STRING_VALUE)+ PAREN_RIGHT
+;
+
 init:
     (PACKAGE ID)*
-    (IMPORT STRING_VALUE)*
+    (imports)*
 ;
 
 stmt_sect:
-    function_declaration
-    expression
+    (declaration_struct)*
+    (function_declaration expression)+
 ;
 
 expression:
     BRACE_LEFT
-    (function_call | var_declaration | var_assign | loop_call)*
+    (function_call
+    | var_declaration
+    | var_assign
+    | loop_call
+    | instance_struct
+    | ID value_move
+    | if_stmt
+    | BREAK
+    | CONTINUE)*
+    (ret)?
     BRACE_RIGHT
 ;
 
 // GENERAL
-type:
+type_primitive:
     TYPE_UINT
     | TYPE_INT
     | TYPE_INT8
@@ -37,17 +51,35 @@ type:
     | TYPE_FLOAT64
     | TYPE_STRING
     | TYPE_BOOL
+;
+
+type:
+    type_primitive
     | type_array
     | type_map
 ;
 
 type_array:
-    BRACKET_LEFT (ints)? BRACKET_RIGHT type
+    BRACKET_LEFT (ints)? BRACKET_RIGHT (type | ID)
     | BRACKET_LEFT DOT DOT DOT BRACKET_RIGHT type
 ;
 
 type_map:
     MAP BRACKET_LEFT type BRACKET_RIGHT type
+;
+
+declaration_struct:
+    TYPE ID STRUCT BRACE_LEFT
+    (ID type)*
+    BRACE_RIGHT
+;
+
+instance_struct:
+    ID ASSIGN ID BRACE_LEFT (attr_struct (COMMA attr_struct)* (COMMA)? )? BRACE_RIGHT
+;
+
+attr_struct:
+    ID COLON value
 ;
 
 ints:
@@ -59,23 +91,47 @@ ints:
 
 value:
     STRING_VALUE
+    | CHAR_VALUE
     | ints
     | FLOAT_LITERAL
     | ID
-    | value_array
+    | (declaration_array | value_array)
     | value_map
-    // | value (COMMA value)?
+    | (TRUE | FALSE)
+;
+
+operations:
+    PLUS | MINUS | TIMES | DIV
+;
+
+expr_math:
+    (ID | ints | FLOAT_LITERAL | conversion) (operations expr_math)*
+;
+
+expr_bool:
+    (ID | value | function_call) (compare (expr_bool | expr_math))*
+;
+
+declaration_array:
+    type_array BRACE_LEFT ( value (COMMA value)* )? BRACE_RIGHT
 ;
 
 value_array:
-    type_array BRACE_LEFT ( ints (COMMA ints)* )? BRACE_RIGHT
-    | ID BRACKET_LEFT ints BRACKET_RIGHT
+    ID BRACKET_LEFT ints BRACKET_RIGHT
     | ID BRACKET_LEFT ID BRACKET_RIGHT
     | ID BRACKET_LEFT value BRACKET_RIGHT
 ;
 
 value_map:
-    type_map BRACE_LEFT ( value COLON value (COMMA value COLON value)* (COMMA)? )? BRACE_RIGHT
+    type_map BRACE_LEFT ( attr_map (COMMA attr_map)* (COMMA)? )? BRACE_RIGHT
+;
+
+attr_map:
+    value COLON (value | BRACE_LEFT (attr_json COMMA)* BRACE_RIGHT)
+;
+
+attr_json:
+    BRACE_LEFT ( attr_struct (COMMA attr_struct)* (COMMA)? )* BRACE_RIGHT
 ;
 
 value_move:
@@ -83,6 +139,7 @@ value_move:
     | MINUS MINUS
     | PLUS ints
     | MINUS ints
+    | PLUS ASSIGN_VAR
 ;
 
 compare:
@@ -94,10 +151,25 @@ compare:
     | GREATER_EQ
 ;
 
+logical:
+    AND
+    | OR
+    | NOT
+    | MOD
+;
+
+conversion:
+    type_primitive PAREN_LEFT (value | ID | function_call) PAREN_RIGHT
+;
+
 // FUNCTIONS
 param_value:
     value
     | function_call
+    | expr_math
+    | expr_bool
+    | value_move
+    | type_map
 ;
 
 param_declaration:
@@ -110,7 +182,12 @@ function_declaration:
 
 function_call:
     ID PAREN_LEFT (param_value (COMMA param_value)*)* PAREN_RIGHT
-    | ID (DOT function_call)+
+    | ID (DOT function_call)*
+;
+
+ret:
+    RETURN 
+    | RETURN (expr_math | expr_bool)
 ;
 
 // VARIABLES
@@ -120,9 +197,9 @@ var_declaration:
 ;
 
 var_assign:
-    ID ASSIGN value
-    | ID ASSIGN_VAR function_call
-    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value
+    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (value | function_call | expr_math | expr_bool)
+    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR (value | function_call | expr_math | expr_bool)
+    | ID BRACKET_LEFT value BRACKET_RIGHT value_move
 ;
 
 // LOOP
@@ -132,10 +209,18 @@ loop_call:
     | FOR ID (COMMA ID)* ASSIGN RANGE ID expression
     | FOR ID compare ints expression
     | FOR expression
-    | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expression
+    | FOR UNDERSCORE COMMA ID ASSIGN RANGE (ID | function_call | value_array) expression
 ;
 
+// CONDICIONAL
+if_condicional:
+    (ID | value | function_call | NULL) (compare (ID | value | function_call | NULL))?
+;
 
+if_stmt:
+    IF if_condicional (logical if_condicional)* expression
+    | if_stmt ELSE (if_stmt | expression)
+;
 
 
 
