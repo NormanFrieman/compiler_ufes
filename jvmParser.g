@@ -21,11 +21,10 @@ init:
 
 stmt_sect:
     (declaration_struct)*
-    (function_declaration expression)+
+    (function_declaration BRACE_LEFT expression BRACE_RIGHT)+
 ;
 
 expression:
-    BRACE_LEFT
     (function_call
     | var_declaration
     | var_assign
@@ -37,7 +36,6 @@ expression:
     | break
     | CONTINUE)*
     (ret)?
-    BRACE_RIGHT
 ;
 
 // GENERAL
@@ -193,12 +191,12 @@ ret:
 
 // VARIABLES
 var_declaration:
-    VAR ID type
+    VAR ID (type)?
     | var_declaration ASSIGN_VAR value
 ;
 
 var_assign:
-    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (value | function_call | expr_math | expr_bool)
+    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (value | function_call | expr_math | expr_bool) (COMMA (value | function_call | expr_math | expr_bool))*
     | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR (value | function_call | expr_math | expr_bool)
     | ID BRACKET_LEFT value BRACKET_RIGHT value_move
 ;
@@ -214,12 +212,12 @@ break:
 
 // LOOP
 loop_call:
-    FOR var_assign SEMICOLON ID compare ints SEMICOLON ID value_move expression
-    | FOR var_assign SEMICOLON ID compare function_call SEMICOLON ID value_move expression
-    | FOR ID (COMMA ID)* ASSIGN RANGE ID expression
-    | FOR ID compare ints expression
-    | FOR expression
-    | FOR UNDERSCORE COMMA ID ASSIGN RANGE (ID | function_call | value_array) expression
+    FOR var_assign SEMICOLON ID compare ints SEMICOLON ID value_move BRACE_LEFT expression BRACE_RIGHT
+    | FOR var_assign SEMICOLON ID compare function_call SEMICOLON ID value_move BRACE_LEFT expression BRACE_RIGHT
+    | FOR ID (COMMA ID)* ASSIGN RANGE ID BRACE_LEFT expression BRACE_RIGHT
+    | FOR ID compare ints BRACE_LEFT expression BRACE_RIGHT
+    | FOR BRACE_LEFT expression BRACE_RIGHT
+    | FOR UNDERSCORE COMMA ID ASSIGN RANGE (ID | function_call | value_array) BRACE_LEFT expression BRACE_RIGHT
 ;
 
 // CONDICIONAL
@@ -228,7 +226,7 @@ if_condicional:
 ;
 
 if_stmt:
-    IF if_condicional (logical if_condicional)* expression
-    | IF PAREN_LEFT if_condicional (logical if_condicional)* PAREN_RIGHT expression
-    | if_stmt ELSE (if_stmt | expression)
+    IF if_condicional (logical if_condicional)* BRACE_LEFT expression BRACE_RIGHT
+    | IF PAREN_LEFT if_condicional (logical if_condicional)* PAREN_RIGHT BRACE_LEFT expression BRACE_RIGHT
+    | if_stmt ELSE (if_stmt | BRACE_LEFT expression BRACE_RIGHT)
 ;
