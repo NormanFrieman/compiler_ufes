@@ -8,7 +8,7 @@ GRAMMAR_NAME=jvm
 GEN_PATH=$ROOT/generated
 
 IN=$ROOT/tests/casetests
-TEST=$ROOT/tests/expected_scanner
+TEST=$ROOT/tests/expected_parser
 
 GREEN='\e[32m'
 RED='\e[31m'
@@ -31,7 +31,7 @@ for infile in `ls $IN/*.go`; do
     name="${base//.go/}"
     outfile=$TEST/${name}.txt
     echo Running $base
-    if java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig $GRAMMAR_NAME tokens -tokens $infile 2>&1 | diff -w $outfile -; then
+    if java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig $GRAMMAR_NAME program $infile 2>&1 | diff -w $outfile -; then
         echo -e $base ${GREEN}success${NC}
     else
         echo -e $base ${RED}error${NC}
