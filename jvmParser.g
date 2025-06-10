@@ -42,7 +42,7 @@ type:
 ;
 
 type_array:
-    BRACKET_LEFT (INT_DEC)? BRACKET_RIGHT type
+    BRACKET_LEFT (ints)? BRACKET_RIGHT type
     | BRACKET_LEFT DOT DOT DOT BRACKET_RIGHT type
 ;
 
@@ -50,9 +50,16 @@ type_map:
     MAP BRACKET_LEFT type BRACKET_RIGHT type
 ;
 
+ints:
+    | INT_DEC
+    | INT_HEX
+    | INT_OCT
+    | INT_BIN
+;
+
 value:
     STRING_VALUE
-    | INT_DEC
+    | ints
     | FLOAT_LITERAL
     | ID
     | value_array
@@ -61,8 +68,8 @@ value:
 ;
 
 value_array:
-    type_array BRACE_LEFT ( INT_DEC (COMMA INT_DEC)* )? BRACE_RIGHT
-    | ID BRACKET_LEFT INT_DEC BRACKET_RIGHT
+    type_array BRACE_LEFT ( ints (COMMA ints)* )? BRACE_RIGHT
+    | ID BRACKET_LEFT ints BRACKET_RIGHT
     | ID BRACKET_LEFT ID BRACKET_RIGHT
     | ID BRACKET_LEFT value BRACKET_RIGHT
 ;
@@ -74,8 +81,8 @@ value_map:
 value_move:
     PLUS PLUS
     | MINUS MINUS
-    | PLUS INT_DEC
-    | MINUS INT_DEC
+    | PLUS ints
+    | MINUS ints
 ;
 
 compare:
@@ -120,13 +127,12 @@ var_assign:
 
 // LOOP
 loop_call:
-    FOR var_assign SEMICOLON ID compare INT_DEC SEMICOLON ID value_move expression
+    FOR var_assign SEMICOLON ID compare ints SEMICOLON ID value_move expression
     | FOR var_assign SEMICOLON ID compare function_call SEMICOLON ID value_move expression
     | FOR ID (COMMA ID)* ASSIGN RANGE ID expression
-    // | var_declaration_composite FOR ID compare INT_DEC expres
-    // | FOR expres
-    // | var_declaration_composite FOR ID COMMA ID ASSIGN RANGE ID expres
-    // | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expres
+    | FOR ID compare ints expression
+    | FOR expression
+    | FOR UNDERSCORE COMMA ID ASSIGN RANGE ID expression
 ;
 
 
