@@ -230,3 +230,8 @@ if_stmt:
     | IF PAREN_LEFT if_condicional (logical if_condicional)* PAREN_RIGHT BRACE_LEFT expression BRACE_RIGHT
     | if_stmt ELSE (if_stmt | BRACE_LEFT expression BRACE_RIGHT)
 ;
+
+
+// variaveis globais
+// switch
+// refatorar expression
