@@ -72,6 +72,7 @@ value_int:
 
 value_array:
     type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
+    | ID BRACKET_LEFT (ID | value_int) BRACKET_RIGHT
 ;
 
 value_primitive:
