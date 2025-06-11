@@ -35,7 +35,7 @@ commands:
 ;
 
 // VALUES AND TYPES
-primitive_type:
+type_primitive:
     TYPE_UINT
     | TYPE_INT
     | TYPE_INT8
@@ -48,15 +48,27 @@ primitive_type:
     | TYPE_BOOL
 ;
 
-type:
-    primitive_type
+type_array:
+    BRACKET_LEFT value_int BRACKET_RIGHT type
 ;
 
-primitive_value:
+type_composite:
+    type_array
+;
+
+type:
+    type_primitive
+;
+
+value_int:
     INT_DEC
     | INT_HEX
     | INT_OCT
     | INT_BIN
+;
+
+value_primitive:
+    value_int
     | NEGATIVE_INT_VALUE
     | FLOAT_LITERAL
     | NEGATIVE_FLOAT_LITERAL
@@ -64,11 +76,13 @@ primitive_value:
 ;
 
 value:
-    primitive_value
+    value_primitive
 ;
 
 value_assign:
-    value | ID
+    value
+    | ID
+    | type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
 ;
 
 value_assign_multiple:
