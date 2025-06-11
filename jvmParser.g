@@ -110,6 +110,7 @@ value:
 value_assign:
     value
     | ID
+    | function_call
 ;
 
 value_assign_multiple:
