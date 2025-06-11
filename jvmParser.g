@@ -51,7 +51,7 @@ type_primitive:
 
 // Type
 type_array:
-    BRACKET_LEFT value_int BRACKET_RIGHT type
+    BRACKET_LEFT (value_int)? BRACKET_RIGHT type
 ;
 
 type_composite:
@@ -86,7 +86,7 @@ value_int:
 ;
 
 value_array:
-    type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
+    type_array BRACE_LEFT (value_assign_multiple)? BRACE_RIGHT
     | ID BRACKET_LEFT (ID | value_int) BRACKET_RIGHT
 ;
 
