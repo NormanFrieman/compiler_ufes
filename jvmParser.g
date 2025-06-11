@@ -58,6 +58,7 @@ type_composite:
 
 type:
     type_primitive
+    | type_composite
 ;
 
 value_int:
@@ -75,6 +76,10 @@ value_primitive:
     | STRING_VALUE
 ;
 
+value_array:
+    type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
+;
+
 value:
     value_primitive
 ;
@@ -82,7 +87,7 @@ value:
 value_assign:
     value
     | ID
-    | type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
+    | value_array
 ;
 
 value_assign_multiple:
@@ -101,7 +106,7 @@ attr_multiple:
 var_init:
     VAR ID type
     | ID ASSIGN value_assign
-    | (CONST | VAR) ID (type)? ASSIGN_VAR value_assign
+    | (CONST | VAR) ID (type_array)? ASSIGN_VAR value_array
 ;
 
 var_update:
