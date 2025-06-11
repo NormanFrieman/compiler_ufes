@@ -125,7 +125,7 @@ function_declaration:
 ;
 
 function_call:
-    ID PAREN_LEFT (value_assign)? PAREN_RIGHT
+    ID PAREN_LEFT (value_assign_multiple)? PAREN_RIGHT
     | ID DOT function_call
 ;
 
