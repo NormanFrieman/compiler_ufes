@@ -48,6 +48,7 @@ type_primitive:
     | TYPE_BOOL
 ;
 
+// Type
 type_array:
     BRACKET_LEFT value_int BRACKET_RIGHT type
 ;
@@ -61,11 +62,16 @@ type:
     | type_composite
 ;
 
+// Value
 value_int:
     INT_DEC
     | INT_HEX
     | INT_OCT
     | INT_BIN
+;
+
+value_array:
+    type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
 ;
 
 value_primitive:
@@ -76,18 +82,18 @@ value_primitive:
     | STRING_VALUE
 ;
 
-value_array:
-    type_array BRACE_LEFT value_assign_multiple BRACE_RIGHT
+value_composite:
+    value_array
 ;
 
 value:
     value_primitive
+    | value_composite
 ;
 
 value_assign:
     value
     | ID
-    | value_array
 ;
 
 value_assign_multiple:
@@ -120,6 +126,7 @@ function_declaration:
 
 function_call:
     ID PAREN_LEFT (value_assign)? PAREN_RIGHT
+    | ID DOT function_call
 ;
 
 function_stmt:
