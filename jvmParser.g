@@ -63,6 +63,19 @@ type:
 ;
 
 // Value
+compare:
+    EQUAL
+    | NOT_EQUAL
+    | LESS
+    | GREATER 
+    | LESS_EQ  
+    | GREATER_EQ
+
+value_increase:
+    PLUS PLUS
+    | MINUS MINUS
+;
+
 value_int:
     INT_DEC
     | INT_HEX
@@ -132,4 +145,25 @@ function_call:
 
 function_stmt:
     function_declaration BRACE_LEFT (scope)? BRACE_RIGHT
+;
+
+// LOOP
+for_init:
+    ID ASSIGN value_assign
+;
+
+for_cond:
+    ID compare function_call
+;
+
+for_end:
+    ID value_increase
+;
+
+for_declaration:
+    FOR for_init SEMICOLON for_cond SEMICOLON for_end
+;
+
+for_stmt:
+    for_declaration BRACE_LEFT (scope)? BRACE_RIGHT
 ;
