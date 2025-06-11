@@ -32,6 +32,7 @@ commands:
     | function_call
     | var_init
     | var_update
+    | for_stmt
 ;
 
 // VALUES AND TYPES
