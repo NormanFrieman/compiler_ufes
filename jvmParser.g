@@ -101,7 +101,7 @@ attr_multiple:
 var_init:
     VAR ID type
     | ID ASSIGN value_assign
-    | CONST ID ASSIGN_VAR value_assign
+    | (CONST | VAR) ID (type)? ASSIGN_VAR value_assign
 ;
 
 var_update:
