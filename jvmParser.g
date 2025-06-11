@@ -133,7 +133,7 @@ var_init:
 ;
 
 var_update:
-    ID ASSIGN_VAR value
+    ID ASSIGN_VAR value_assign
 ;
 
 // FUNCTIONS
