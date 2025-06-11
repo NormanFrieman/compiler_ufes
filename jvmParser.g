@@ -151,6 +151,10 @@ function_stmt:
 ;
 
 // LOOP
+id_multiple:
+    ID (COMMA ID)*
+;
+
 for_init:
     ID ASSIGN value_assign
 ;
@@ -163,8 +167,13 @@ for_end:
     ID value_increase
 ;
 
+for_range:
+    id_multiple ASSIGN RANGE ID
+;
+
 for_declaration:
     FOR for_init SEMICOLON for_cond SEMICOLON for_end
+    | FOR for_range
 ;
 
 for_stmt:
