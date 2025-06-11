@@ -70,6 +70,7 @@ compare:
     | GREATER 
     | LESS_EQ  
     | GREATER_EQ
+;
 
 value_increase:
     PLUS PLUS
