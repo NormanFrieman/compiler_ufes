@@ -31,10 +31,19 @@ scope:
 command:
     return_stmt
     | function_call
+
     | var_init
     | var_update
+    
     | for_stmt
     | if_stmt
+    
+    | ID value_increase
+    
+    | CONTINUE
+    | BREAK ID?
+    | goto_init
+    | goto_call
 ;
 
 // VALUES AND TYPES
@@ -96,6 +105,7 @@ value_assign:
     | ID
     | function_call
     | value_assign (COMMA value_assign)+
+    | math_expr
 ;
 
 // Math expressions
@@ -157,12 +167,17 @@ var_init:
     VAR ID (type)? (ASSIGN_VAR value_assign)?
     | CONST ID (ASSIGN_VAR value_assign)?
     | ID ASSIGN value_assign
+    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN value_assign
 ;
 
 var_update:
     ID ASSIGN_VAR value_assign
-    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value
-    | ID TIMES ASSIGN_VAR value
+    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value_assign
+
+    // assignment operator
+    | ID PLUS ASSIGN_VAR value_assign
+    | ID MINUS ASSIGN_VAR value_assign
+    | ID TIMES ASSIGN_VAR value_assign
 ;
 
 // FUNCTIONS
@@ -171,7 +186,7 @@ function_declaration:
 ;
 
 function_call:
-    ID PAREN_LEFT value_assign PAREN_RIGHT
+    ID PAREN_LEFT value_assign? PAREN_RIGHT
     | ID DOT function_call
 ;
 
@@ -180,14 +195,10 @@ function_stmt:
 ;
 
 return_stmt:
-    RETURN (ID | function_call)
+    RETURN value_assign?
 ;
 
 // LOOP
-id_multiple:
-    ID (COMMA ID)*
-;
-
 for_init:
     ID ASSIGN value_assign
 ;
@@ -201,7 +212,7 @@ for_end:
 ;
 
 for_range:
-    id_multiple ASSIGN RANGE ID
+    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN RANGE ID
 ;
 
 for_declaration:
@@ -211,13 +222,14 @@ for_declaration:
 ;
 
 for_stmt:
-    for_declaration BRACE_LEFT scope BRACE_RIGHT
+    (FOR | for_declaration) BRACE_LEFT scope BRACE_RIGHT
 ;
 
 // CONDICIONAL
 if_init:
     bool_stmt
     | var_init SEMICOLON bool_stmt
+    | PAREN_LEFT bool_stmt PAREN_RIGHT
 ;
 
 if_stmt:
@@ -230,4 +242,13 @@ else_if_stmt:
 
 else_stmt:
     ELSE BRACE_LEFT scope BRACE_RIGHT
+;
+
+// GOTO
+goto_init:
+    ID COLON scope
+;
+
+goto_call:
+    GOTO ID
 ;

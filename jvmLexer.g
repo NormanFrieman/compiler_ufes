@@ -32,6 +32,7 @@ STRUCT     : 'struct' ;
 BREAK      : 'break' ;
 CONTINUE   : 'continue' ;
 NULL       : 'nil' ;
+GOTO       : 'goto';
 
 ASSIGN     : ':=' ;
 ASSIGN_VAR : '=' ;

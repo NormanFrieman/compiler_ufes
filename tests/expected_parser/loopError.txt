@@ -1,3 +1,2 @@
-line 8:10 token recognition error at: '#'
-line 8:12 no viable alternative at input 'forinums'
-line 8:17 mismatched input '{' expecting {'var', 'return', 'for', 'if', 'break', 'continue', '.', '}', '_', ID}
+line 8:10 no viable alternative at input 'foriin'
+line 12:0 missing '}' at '<EOF>'
