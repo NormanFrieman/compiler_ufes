@@ -38,8 +38,6 @@ command:
     | for_stmt
     | if_stmt
     
-    | ID value_increase
-    
     | CONTINUE
     | BREAK ID?
     | goto_init
@@ -65,6 +63,9 @@ type:
     // type composite
     | BRACKET_LEFT (value)? BRACKET_RIGHT type
     | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT
+
+    // map
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
 ;
 
 // Value
@@ -91,6 +92,11 @@ value:
     /// value array
     | type BRACE_LEFT (value_assign)? BRACE_RIGHT
     | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
+
+    /// inicialize map
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
+
+    /// value map
     | MAP BRACKET_LEFT type BRACKET_RIGHT type
         BRACE_LEFT
             (STRING_VALUE COLON value COMMA)* STRING_VALUE COLON value (COMMA)?
@@ -102,10 +108,21 @@ value:
 
 value_assign:
     value
-    | ID
+    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)?
     | function_call
     | value_assign (COMMA value_assign)+
-    | math_expr
+
+    // type conversion
+    | type PAREN_LEFT value_assign PAREN_RIGHT
+
+    // math operations
+    | value_assign math_operations value_assign
+
+    // bool expressions
+    | ((value | ID | function_call) | NULL)
+    | ((value | ID | function_call) | NULL) compare ((value | ID | function_call) | NULL)
+    | ((value | ID | function_call) | NULL) compare PAREN_LEFT (value | ID | function_call) PAREN_RIGHT
+    | PAREN_LEFT (value | ID | function_call) PAREN_RIGHT compare ((value | ID | function_call) | NULL)
 ;
 
 // Math expressions
@@ -115,11 +132,6 @@ math_operations:
     | TIMES
     | DIV
     | MOD
-;
-
-math_expr:
-    (ID | value | function_call) math_operations (ID | value | function_call)
-    | (ID | value | function_call) math_operations math_expr
 ;
 
 // Bool expressions
@@ -137,24 +149,9 @@ compare:
     | GREATER_EQ
 ;
 
-bool_inputs:
-    ID
-    | value
-    | function_call
-    | math_expr
-    | NULL
-;
-
-bool_expr:
-    bool_inputs
-    | bool_inputs compare bool_inputs
-    | bool_inputs compare PAREN_LEFT bool_expr PAREN_RIGHT
-    | PAREN_LEFT bool_expr PAREN_RIGHT compare bool_inputs
-;
-
 bool_stmt:
-    bool_expr
-    | (NOT)? (PAREN_LEFT)? (NOT)? bool_expr bool_operations (NOT)? bool_expr (PAREN_RIGHT)?
+    value_assign
+    | (NOT)? (PAREN_LEFT)? (NOT)? value_assign bool_operations (NOT)? value_assign (PAREN_RIGHT)?
     | bool_stmt bool_operations bool_stmt
 ;
 
@@ -167,17 +164,19 @@ var_init:
     VAR ID (type)? (ASSIGN_VAR value_assign)?
     | CONST ID (ASSIGN_VAR value_assign)?
     | ID ASSIGN value_assign
-    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN value_assign
+    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) value_assign
 ;
 
 var_update:
-    ID ASSIGN_VAR value_assign
-    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value_assign
+    ID (ASSIGN | ASSIGN_VAR) value_assign
+    | ID BRACKET_LEFT value BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) value_assign
 
     // assignment operator
     | ID PLUS ASSIGN_VAR value_assign
     | ID MINUS ASSIGN_VAR value_assign
     | ID TIMES ASSIGN_VAR value_assign
+
+    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)? value_increase
 ;
 
 // FUNCTIONS
