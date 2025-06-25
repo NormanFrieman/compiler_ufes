@@ -40,11 +40,6 @@ command:
 // VALUES AND TYPES
 
 // Type
-type_composite:
-    BRACKET_LEFT (value_primitive)? BRACKET_RIGHT type
-    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT
-;
-
 type:
     // type primitive
     TYPE_UINT
@@ -58,7 +53,9 @@ type:
     | TYPE_STRING
     | TYPE_BOOL
 
-    | type_composite
+    // type composite
+    | BRACKET_LEFT (value)? BRACKET_RIGHT type
+    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT
 ;
 
 // Value
@@ -67,7 +64,8 @@ value_increase:
     | MINUS MINUS
 ;
 
-value_primitive:
+value:
+    // value primitive
     INT_DEC
     | INT_HEX
     | INT_OCT
@@ -79,30 +77,25 @@ value_primitive:
     | CHAR_VALUE
     | TRUE
     | FALSE
-;
 
-value_composite:
-    // value array
-    type_composite BRACE_LEFT (value_assign | value_assign_multiple) BRACE_RIGHT
-    | ID BRACKET_LEFT (ID | value_primitive) BRACKET_RIGHT
+    // value composite
+    /// value array
+    | type BRACE_LEFT (value_assign)? BRACE_RIGHT
+    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
+        BRACE_LEFT
+            (STRING_VALUE COLON value COMMA)* STRING_VALUE COLON value (COMMA)?
+        BRACE_RIGHT
 
-    // value struct
+    /// value struct
     | ID (DOT ID)+
-;
-
-value:
-    value_primitive
-    | value_composite
 ;
 
 value_assign:
     value
     | ID
     | function_call
-;
-
-value_assign_multiple:
-    value_assign (COMMA value_assign)+
+    | value_assign (COMMA value_assign)+
 ;
 
 // Math expressions
@@ -115,8 +108,8 @@ math_operations:
 ;
 
 math_expr:
-    (ID | value_primitive | function_call) math_operations (ID | value_primitive | function_call)
-    | (ID | value_primitive | function_call) math_operations math_expr
+    (ID | value | function_call) math_operations (ID | value | function_call)
+    | (ID | value | function_call) math_operations math_expr
 ;
 
 // Bool expressions
@@ -160,22 +153,16 @@ attr:
     ID (type)? (COMMA (ID (type)?))*
 ;
 
-var_or_under:
-    ID | UNDERSCORE
-;
-
-var_without_var:
-    (var_or_under) (COMMA var_or_under)* ASSIGN value_assign
-;
-
 var_init:
-    VAR ID type #InitWithVar
-    | (var_or_under) (COMMA var_or_under)* ASSIGN value_assign #InitiWithoutVar
-    | (CONST | VAR) ID (type_composite)? ASSIGN_VAR value_composite #InitArray
+    VAR ID (type)? (ASSIGN_VAR value_assign)?
+    | CONST ID (ASSIGN_VAR value_assign)?
+    | ID ASSIGN value_assign
 ;
 
 var_update:
     ID ASSIGN_VAR value_assign
+    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR value
+    | ID TIMES ASSIGN_VAR value
 ;
 
 // FUNCTIONS
@@ -184,7 +171,7 @@ function_declaration:
 ;
 
 function_call:
-    ID PAREN_LEFT (value_assign | value_assign_multiple) PAREN_RIGHT
+    ID PAREN_LEFT value_assign PAREN_RIGHT
     | ID DOT function_call
 ;
 
@@ -206,7 +193,7 @@ for_init:
 ;
 
 for_cond:
-    ID compare function_call
+    ID compare (value | ID | function_call)
 ;
 
 for_end:
@@ -218,7 +205,8 @@ for_range:
 ;
 
 for_declaration:
-    FOR for_init SEMICOLON for_cond SEMICOLON for_end
+    FOR for_cond
+    | FOR for_init SEMICOLON for_cond SEMICOLON for_end
     | FOR for_range
 ;
 
