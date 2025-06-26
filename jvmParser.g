@@ -4,6 +4,7 @@ options {
     tokenVocab = jvmLexer;
 }
 
+// STATEMENTS
 program:
     init
     stmt_sect
@@ -20,26 +21,34 @@ init:
 ;
 
 stmt_sect:
-    (declaration_struct)*
-    (function_declaration BRACE_LEFT expression BRACE_RIGHT)+
+    (function_stmt)*
 ;
 
-expression:
-    (function_call
-    | var_declaration
-    | var_assign
-    | loop_call
-    | instance_struct
-    | ID value_move
+scope:
+    command*
+;
+
+command:
+    return_stmt
+    | function_call
+
+    | var_init
+    | var_update
+    
+    | for_stmt
     | if_stmt
-    | goto
-    | break
-    | CONTINUE)*
-    (ret)?
+    
+    | CONTINUE
+    | BREAK ID?
+    | goto_init
+    | goto_call
 ;
 
-// GENERAL
-type_primitive:
+// VALUES AND TYPES
+
+// Type
+type:
+    // type primitive
     TYPE_UINT
     | TYPE_INT
     | TYPE_INT8
@@ -50,95 +59,85 @@ type_primitive:
     | TYPE_FLOAT64
     | TYPE_STRING
     | TYPE_BOOL
+
+    // type composite
+    | BRACKET_LEFT (value)? BRACKET_RIGHT type
+    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT
+
+    // map
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
 ;
 
-type:
-    type_primitive
-    | type_array
-    | type_map
+// Value
+value_increase:
+    PLUS PLUS
+    | MINUS MINUS
 ;
 
-type_array:
-    BRACKET_LEFT (ints)? BRACKET_RIGHT (type | ID)
-    | BRACKET_LEFT DOT DOT DOT BRACKET_RIGHT type
-;
-
-type_map:
-    MAP BRACKET_LEFT type BRACKET_RIGHT type
-;
-
-declaration_struct:
-    TYPE ID STRUCT BRACE_LEFT
-    (ID type)*
-    BRACE_RIGHT
-;
-
-instance_struct:
-    ID ASSIGN ID BRACE_LEFT (attr_struct (COMMA attr_struct)* (COMMA)? )? BRACE_RIGHT
-;
-
-attr_struct:
-    ID COLON value
-;
-
-ints:
+value:
+    // value primitive
     INT_DEC
     | INT_HEX
     | INT_OCT
     | INT_BIN
-;
-
-value:
-    STRING_VALUE
-    | CHAR_VALUE
-    | ints
+    | NEGATIVE_INT_VALUE
     | FLOAT_LITERAL
-    | ID
-    | (declaration_array | value_array)
-    | value_map
-    | (TRUE | FALSE)
+    | NEGATIVE_FLOAT_LITERAL
+    | STRING_VALUE
+    | CHAR_VALUE
+    | TRUE
+    | FALSE
+
+    // value composite
+    /// value array
+    | type BRACE_LEFT (value_assign)? BRACE_RIGHT
+    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
+
+    /// inicialize map
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
+
+    /// value map
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type
+        BRACE_LEFT
+            (STRING_VALUE COLON value COMMA)* STRING_VALUE COLON value (COMMA)?
+        BRACE_RIGHT
+
+    /// value struct
+    | ID (DOT ID)+
 ;
 
-operations:
-    PLUS | MINUS | TIMES | DIV
+value_assign:
+    value
+    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)?
+    | function_call
+    | value_assign (COMMA value_assign)+
+
+    // type conversion
+    | type PAREN_LEFT value_assign PAREN_RIGHT
+
+    // math operations
+    | value_assign math_operations value_assign
+
+    // bool expressions
+    | ((value | ID | function_call) | NULL)
+    | ((value | ID | function_call) | NULL) compare ((value | ID | function_call) | NULL)
+    | ((value | ID | function_call) | NULL) compare PAREN_LEFT (value | ID | function_call) PAREN_RIGHT
+    | PAREN_LEFT (value | ID | function_call) PAREN_RIGHT compare ((value | ID | function_call) | NULL)
 ;
 
-expr_math:
-    (ID | ints | FLOAT_LITERAL | conversion) (operations expr_math)*
+// Math expressions
+math_operations:
+    PLUS
+    | MINUS
+    | TIMES
+    | DIV
+    | MOD
 ;
 
-expr_bool:
-    (ID | value | function_call) (compare (expr_bool | expr_math))*
-;
-
-declaration_array:
-    type_array BRACE_LEFT ( value (COMMA value)* )? BRACE_RIGHT
-;
-
-value_array:
-    ID BRACKET_LEFT ints BRACKET_RIGHT
-    | ID BRACKET_LEFT ID BRACKET_RIGHT
-    | ID BRACKET_LEFT value BRACKET_RIGHT
-;
-
-value_map:
-    type_map BRACE_LEFT ( attr_map (COMMA attr_map)* (COMMA)? )? BRACE_RIGHT
-;
-
-attr_map:
-    value COLON (value | BRACE_LEFT (attr_json COMMA)* BRACE_RIGHT)
-;
-
-attr_json:
-    BRACE_LEFT ( attr_struct (COMMA attr_struct)* (COMMA)? )* BRACE_RIGHT
-;
-
-value_move:
-    PLUS PLUS
-    | MINUS MINUS
-    | PLUS ints
-    | MINUS ints
-    | PLUS ASSIGN_VAR
+// Bool expressions
+bool_operations:
+    AND
+    | OR
 ;
 
 compare:
@@ -150,88 +149,105 @@ compare:
     | GREATER_EQ
 ;
 
-logical:
-    AND
-    | OR
-    | NOT
-    | MOD
+bool_stmt:
+    value_assign
+    | (NOT)? (PAREN_LEFT)? (NOT)? value_assign bool_operations (NOT)? value_assign (PAREN_RIGHT)?
+    | bool_stmt bool_operations bool_stmt
 ;
 
-conversion:
-    type_primitive PAREN_LEFT (value | ID | function_call) PAREN_RIGHT
+// VARIABLES AND ATTRIBUTES
+attr:
+    ID (type)? (COMMA (ID (type)?))*
+;
+
+var_init:
+    VAR ID (type)? (ASSIGN_VAR value_assign)?
+    | CONST ID (ASSIGN_VAR value_assign)?
+    | ID ASSIGN value_assign
+    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) value_assign
+;
+
+var_update:
+    ID (ASSIGN | ASSIGN_VAR) value_assign
+    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) value_assign
+
+    // assignment operator
+    | ID PLUS ASSIGN_VAR value_assign
+    | ID MINUS ASSIGN_VAR value_assign
+    | ID TIMES ASSIGN_VAR value_assign
+
+    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)? value_increase
 ;
 
 // FUNCTIONS
-param_value:
-    value
-    | function_call
-    | expr_math
-    | expr_bool
-    | value_move
-    | type_map
-;
-
-param_declaration:
-    ID (type)?
-;
-
 function_declaration:
-    FUNCTION ID PAREN_LEFT (param_declaration (COMMA param_declaration)*)? PAREN_RIGHT type?
+    FUNCTION ID PAREN_LEFT (attr)? PAREN_RIGHT (type)?
 ;
 
 function_call:
-    ID PAREN_LEFT (param_value (COMMA param_value)*)* PAREN_RIGHT
-    | ID (DOT function_call)*
+    ID PAREN_LEFT value_assign? PAREN_RIGHT
+    | ID DOT function_call
 ;
 
-ret:
-    RETURN 
-    | RETURN (expr_math | expr_bool)
+function_stmt:
+    function_declaration BRACE_LEFT scope BRACE_RIGHT
 ;
 
-// VARIABLES
-var_declaration:
-    VAR ID (type)?
-    | var_declaration ASSIGN_VAR value
-;
-
-var_assign:
-    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (value | function_call | expr_math | expr_bool) (COMMA (value | function_call | expr_math | expr_bool))*
-    | ID BRACKET_LEFT value BRACKET_RIGHT ASSIGN_VAR (value | function_call | expr_math | expr_bool)
-    | ID BRACKET_LEFT value BRACKET_RIGHT value_move
-;
-
-// GO TO
-goto:
-    ID COLON expression
-;
-
-break:
-    BREAK (ID)?
+return_stmt:
+    RETURN value_assign?
 ;
 
 // LOOP
-loop_call:
-    FOR var_assign SEMICOLON ID compare ints SEMICOLON ID value_move BRACE_LEFT expression BRACE_RIGHT
-    | FOR var_assign SEMICOLON ID compare function_call SEMICOLON ID value_move BRACE_LEFT expression BRACE_RIGHT
-    | FOR ID (COMMA ID)* ASSIGN RANGE ID BRACE_LEFT expression BRACE_RIGHT
-    | FOR ID compare ints BRACE_LEFT expression BRACE_RIGHT
-    | FOR BRACE_LEFT expression BRACE_RIGHT
-    | FOR UNDERSCORE COMMA ID ASSIGN RANGE (ID | function_call | value_array) BRACE_LEFT expression BRACE_RIGHT
+for_init:
+    ID ASSIGN value_assign
+;
+
+for_cond:
+    ID compare (value | ID | function_call)
+;
+
+for_end:
+    ID value_increase
+;
+
+for_range:
+    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN RANGE ID
+;
+
+for_declaration:
+    FOR for_cond
+    | FOR for_init SEMICOLON for_cond SEMICOLON for_end
+    | FOR for_range
+;
+
+for_stmt:
+    (FOR | for_declaration) BRACE_LEFT scope BRACE_RIGHT
 ;
 
 // CONDICIONAL
-if_condicional:
-    (ID | value | function_call | NULL) (compare (ID | value | function_call | NULL))?
+if_init:
+    bool_stmt
+    | var_init SEMICOLON bool_stmt
+    | PAREN_LEFT bool_stmt PAREN_RIGHT
 ;
 
 if_stmt:
-    IF if_condicional (logical if_condicional)* BRACE_LEFT expression BRACE_RIGHT
-    | IF PAREN_LEFT if_condicional (logical if_condicional)* PAREN_RIGHT BRACE_LEFT expression BRACE_RIGHT
-    | if_stmt ELSE (if_stmt | BRACE_LEFT expression BRACE_RIGHT)
+    IF if_init BRACE_LEFT scope BRACE_RIGHT (else_if_stmt)* (else_stmt)?
 ;
 
+else_if_stmt:
+    ELSE IF if_init BRACE_LEFT scope BRACE_RIGHT
+;
 
-// variaveis globais
-// switch
-// refatorar expression
+else_stmt:
+    ELSE BRACE_LEFT scope BRACE_RIGHT
+;
+
+// GOTO
+goto_init:
+    ID COLON scope
+;
+
+goto_call:
+    GOTO ID
+;
