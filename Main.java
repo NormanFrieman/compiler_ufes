@@ -27,6 +27,6 @@ public class Main {
         checker.visit(tree);
 
         System.out.println("PARSE SUCCESSFUL!");
-        checker.printTables();
+        // checker.printTables();
     }
 }

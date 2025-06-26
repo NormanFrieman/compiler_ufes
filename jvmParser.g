@@ -165,10 +165,10 @@ attr:
 ;
 
 var_init:
-    VAR ID (type)? (ASSIGN_VAR value_assign)?
-    | CONST ID (ASSIGN_VAR value_assign)?
-    | ID ASSIGN value_assign
-    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) value_assign
+    VAR ID (type)? (ASSIGN_VAR value_assign)?   # varInit
+    | CONST ID (ASSIGN_VAR value_assign)?       # constInit
+    | ID ASSIGN value_assign                    # withoutVarInit
+    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) value_assign # multipleVarsInit
 ;
 
 var_update:
