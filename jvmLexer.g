@@ -1,5 +1,9 @@
 lexer grammar jvmLexer;
 
+@header {
+    package generated;
+}
+
 WS         : [ \t\r\n]+       -> skip ;
 COMMENTS   : '//' ~[\r\n]*    -> skip ;
 

@@ -1,5 +1,9 @@
 parser grammar jvmParser;
 
+@header {
+    package generated;
+}
+
 options {
     tokenVocab = jvmLexer;
 }
