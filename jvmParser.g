@@ -169,7 +169,7 @@ var_init:
 
 var_update:
     ID (ASSIGN | ASSIGN_VAR) value_assign
-    | ID BRACKET_LEFT value BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) value_assign
+    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) value_assign
 
     // assignment operator
     | ID PLUS ASSIGN_VAR value_assign
