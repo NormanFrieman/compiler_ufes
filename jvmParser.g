@@ -53,23 +53,23 @@ command:
 // Type
 type:
     // type primitive
-    TYPE_UINT
-    | TYPE_INT
-    | TYPE_INT8
-    | TYPE_INT16
-    | TYPE_INT32
-    | TYPE_INT64
-    | TYPE_FLOAT32
-    | TYPE_FLOAT64
-    | TYPE_STRING
-    | TYPE_BOOL
+    TYPE_UINT       # uintType
+    | TYPE_INT      # intType
+    | TYPE_INT8     # int8Type
+    | TYPE_INT16    # int16Type
+    | TYPE_INT32    # int32Type
+    | TYPE_INT64    # int64Type
+    | TYPE_FLOAT32  # float32Type
+    | TYPE_FLOAT64  # float64Type
+    | TYPE_STRING   # stringType
+    | TYPE_BOOL     # boolType
 
     // type composite
-    | BRACKET_LEFT (value)? BRACKET_RIGHT type
-    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT
+    | BRACKET_LEFT (value)? BRACKET_RIGHT type                  # arrayType
+    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT   # structType
 
     // map
-    | MAP BRACKET_LEFT type BRACKET_RIGHT type
+    | MAP BRACKET_LEFT type BRACKET_RIGHT type                  # mapType
 ;
 
 // Value
