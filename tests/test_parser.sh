@@ -6,6 +6,7 @@ CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 
 GRAMMAR_NAME=jvm
 GEN_PATH=$ROOT/generated
+BIN_PATH=$ROOT/bin
 
 IN=$ROOT/tests/casetests
 TEST=$ROOT/tests/expected_parser
@@ -14,7 +15,7 @@ GREEN='\e[32m'
 RED='\e[31m'
 NC='\e[0m'
 
-cd $GEN_PATH
+cd $BIN_PATH
 errors=0
 
 # Checks whether it is possible to access the entry codes
@@ -31,7 +32,7 @@ for infile in `ls $IN/*.go`; do
     name="${base//.go/}"
     outfile=$TEST/${name}.txt
     echo Running $base
-    if java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig $GRAMMAR_NAME program $infile 2>&1 | diff -w $outfile -; then
+    if java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig generated.$GRAMMAR_NAME program $infile 2>&1 | diff -w $outfile -; then
         echo -e $base ${GREEN}success${NC}
     else
         echo -e $base ${RED}error${NC}

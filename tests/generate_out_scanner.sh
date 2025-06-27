@@ -6,15 +6,16 @@ CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 
 GRAMMAR_NAME=jvm
 GEN_PATH=$ROOT/generated
+BIN_PATH=$ROOT/bin
 
 IN=$ROOT/tests/casetests
 TEST=$ROOT/tests/expected_scanner
 
-cd $GEN_PATH
+cd $BIN_PATH
 for infile in `ls $IN/*.go`; do
     base=$(basename $infile)
     name="${base//.go/}"
     outfile=$TEST/${name}.txt
     echo Running $base
-    java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig $GRAMMAR_NAME tokens -tokens $infile > $outfile 2>&1
+    java $CLASS_PATH_OPTION org.antlr.v4.gui.TestRig generated.$GRAMMAR_NAME tokens -tokens $infile > $outfile 2>&1
 done

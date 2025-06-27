@@ -37,15 +37,15 @@ javac:
 
 # Executar o lexer
 lexer:
-	cd ${GEN_PATH} && ${GRUN} ${GRAMMAR_NAME} tokens -tokens ${IN}/${FILE}
+	cd ${BIN_PATH} && ${GRUN} ${GEN_PATH}.${GRAMMAR_NAME} tokens -tokens ${IN}/${FILE}
 
 # Executa o parser
 parser:
-	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE)
+	cd $(BIN_PATH) && $(GRUN) ${GEN_PATH}.$(GRAMMAR_NAME) program ${IN}/$(FILE)
 
 # Exibe a parse tree
 parserGui:
-	cd $(GEN_PATH) && $(GRUN) $(GRAMMAR_NAME) program ${IN}/$(FILE) -gui
+	cd $(BIN_PATH) && $(GRUN) ${GEN_PATH}.$(GRAMMAR_NAME) program ${IN}/$(FILE) -gui
 
 # Executa o main
 run:
