@@ -15,8 +15,8 @@ program:
 ;
 
 imports:
-    IMPORT STRING_VALUE
-    | IMPORT PAREN_LEFT (STRING_VALUE)+ PAREN_RIGHT
+    IMPORT STRING_VALUE                                 # simpleImport
+    | IMPORT PAREN_LEFT (STRING_VALUE)+ PAREN_RIGHT     # multiImport
 ;
 
 init:
