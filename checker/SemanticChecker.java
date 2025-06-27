@@ -1,15 +1,19 @@
 package checker;
 
 import java.util.LinkedList;
-
+import java.util.List;
 import org.antlr.v4.runtime.Token;
-
+import org.antlr.v4.runtime.tree.TerminalNode;
 import generated.jvmParser;
 import generated.jvmParserBaseVisitor;
+import generated.jvmParser.Value_assignContext;
 
 public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     private LinkedList<String> st = new LinkedList<String>();
     private LinkedList<Variable> vt = new LinkedList<Variable>();
+
+    // Import list
+    private LinkedList<String> il = new LinkedList<String>();
 
     private int lastPrimitiveType;
 
@@ -75,19 +79,69 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
     @Override
     public Void visitVarInit(jvmParser.VarInitContext ctx) {
-        Token token = ctx.ID().getSymbol();
-        String name = token.getText();
-        int line = token.getLine();
+        Token var = ctx.ID().getSymbol();
+        String varName = var.getText();
+        int varLine = var.getLine();
 
         visit(ctx.type());
 
-        vt.add(new Variable(name, line, new VariableType(this.lastPrimitiveType, false)));
-        System.out.println(name);
-        System.out.println(line);
-        System.out.println(this.lastPrimitiveType);
-
+        vt.add(new Variable(varName, varLine, new VariableType(this.lastPrimitiveType, false)));
         return null;
     };
+
+    @Override
+    public Void visitWithoutVarInit(jvmParser.WithoutVarInitContext ctx) {
+        Token var = ctx.ID().getSymbol();
+        String varName = var.getText();
+        int varLine = var.getLine();
+
+        Value_assignContext valueCtx = ctx.value_assign();
+        Token value = valueCtx.stop;
+        int type = value.getType();
+        if (type == jvmParser.INT_DEC)
+            this.lastPrimitiveType = jvmParser.TYPE_INT;
+
+        vt.add(new Variable(varName, varLine, new VariableType(this.lastPrimitiveType, false)));
+        return null;
+    }
+
+    @Override
+    public Void visitValue_assign(jvmParser.Value_assignContext ctx) {
+        List<TerminalNode> variables = ctx.ID();
+        System.out.println(vt);
+        System.out.println(ctx.ID());
+
+        variables.forEach(variable -> {
+            Token varToken = variable.getSymbol();
+            String varName = varToken.getText();
+            if (!vt.stream().filter(x -> x.Name.equals(varName)).findAny().isPresent()) {
+                System.err.printf("SEMANTIC ERROR (%d): undefined %s\n", varToken.getLine(), varName);
+                System.exit(1);
+            }
+        });
+
+        return null;
+    }
+
+    @Override
+    public Void visitSimpleImport(jvmParser.SimpleImportContext ctx) {
+        Token token = ctx.STRING_VALUE().getSymbol();
+        String importName = token.getText();
+        il.add(importName.replaceAll("\"", ""));
+        return null;
+    }
+
+    @Override
+    public Void visitFunction_call(jvmParser.Function_callContext ctx) {
+        Token idToken = ctx.ID().getSymbol();
+        String lib = idToken.getText();
+        if (!il.contains(lib)) {
+            System.err.printf("SEMANTIC ERROR (%d): undefined %s\n", idToken.getLine(), lib);
+            System.exit(1);
+        }
+
+        return null;
+    }
 
     public void printTables() {
         System.out.print("\n\n");

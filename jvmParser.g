@@ -154,9 +154,9 @@ compare:
 ;
 
 bool_stmt:
-    value_assign
-    | (NOT)? (PAREN_LEFT)? (NOT)? value_assign bool_operations (NOT)? value_assign (PAREN_RIGHT)?
-    | bool_stmt bool_operations bool_stmt
+    value_assign                                                                                    # boolStmtUniqueValue
+    | (NOT)? (PAREN_LEFT)? (NOT)? value_assign bool_operations (NOT)? value_assign (PAREN_RIGHT)?   # boolStmtOneOperation
+    | bool_stmt bool_operations bool_stmt                                                           # boolStmtMultiOperation
 ;
 
 // VARIABLES AND ATTRIBUTES
@@ -230,9 +230,9 @@ for_stmt:
 
 // CONDICIONAL
 if_init:
-    bool_stmt
-    | var_init SEMICOLON bool_stmt
-    | PAREN_LEFT bool_stmt PAREN_RIGHT
+    bool_stmt                               # ifWithoutParen
+    | PAREN_LEFT bool_stmt PAREN_RIGHT      # ifWithParen
+    | var_init SEMICOLON bool_stmt          # ifWithVarInit
 ;
 
 if_stmt:
