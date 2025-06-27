@@ -53,9 +53,9 @@ jobs:
       - name: Give permissions
         run: chmod +x tests/test_checker.sh
 
-      - name: Parser Tests
+      - name: Checker Tests
         run: |
-          echo "Compile parser"
+          echo "Compile checker"
           make
           cd tests
           echo "Run tests"
