@@ -42,3 +42,21 @@ jobs:
           cd tests
           echo "Run tests"
           ./test_parser.sh
+  
+  Checker_Tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Give permissions
+        run: chmod +x tests/test_checker.sh
+
+      - name: Parser Tests
+        run: |
+          echo "Compile parser"
+          make
+          cd tests
+          echo "Run tests"
+          ./test_checker.sh

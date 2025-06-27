@@ -108,9 +108,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     @Override
     public Void visitValue_assign(jvmParser.Value_assignContext ctx) {
         List<TerminalNode> variables = ctx.ID();
-        System.out.println(vt);
-        System.out.println(ctx.ID());
-
         variables.forEach(variable -> {
             Token varToken = variable.getSymbol();
             String varName = varToken.getText();
