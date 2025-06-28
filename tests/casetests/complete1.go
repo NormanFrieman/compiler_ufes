@@ -10,7 +10,7 @@ import (
 
 // converte Celsius para Fahrenheit
 func toFahrenheit(c float64) float64 {
-    return c*9/5 + 32
+    return c*9/5
 }
 
 func main() {

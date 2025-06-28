@@ -25,7 +25,6 @@ init:
 ;
 
 stmt_sect:
-    (struct_declaration)*
     (function_stmt)*
 ;
 
@@ -67,19 +66,6 @@ type:
 
     // type composite
     | BRACKET_LEFT (value)? BRACKET_RIGHT type                  # arrayType
-    | PAREN_LEFT (ID | type) (COMMA (ID | TYPE))+ PAREN_RIGHT   # structType
-
-    // map
-    | MAP BRACKET_LEFT type BRACKET_RIGHT type                  # mapType
-;
-
-// Struct
-struct_declaration:
-    TYPE ID STRUCT BRACE_LEFT (ID type)+ BRACE_RIGHT
-;
-
-struct_instance:
-    ID BRACE_LEFT (ID COLON (ID | value) COMMA?)* BRACE_RIGHT
 ;
 
 // Value
@@ -107,17 +93,8 @@ value:
     | BRACKET_LEFT value? BRACKET_RIGHT type BRACE_LEFT (value COMMA?)* BRACE_RIGHT
     | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
 
-    /// inicialize map
-    | MAP BRACKET_LEFT type BRACKET_RIGHT type
-
-    /// value map
-    | MAP BRACKET_LEFT type BRACKET_RIGHT type
-        BRACE_LEFT
-            (STRING_VALUE COLON value COMMA)* STRING_VALUE COLON value (COMMA)?
-        BRACE_RIGHT
-
-    /// value struct
-    | ID (DOT ID)+
+    /// value conversion
+    | type PAREN_LEFT (ID | value | function_call) PAREN_RIGHT
 ;
 
 // Math expressions
@@ -130,7 +107,8 @@ math_operations:
 ;
 
 math_stmt: // retorna um valor numerico
-    (ID | value) math_operations (ID | value)
+    (ID | value | function_call) math_operations?
+    | math_stmt math_stmt+
 ;
 
 // Bool expressions
@@ -149,7 +127,7 @@ compare:
 ;
 
 bool_stmt: // retorna um valor boolean
-    (ID | value | math_stmt | NULL)
+    (ID | value | function_call | math_stmt | NULL)
     | bool_stmt compare bool_stmt
     | NOT bool_stmt
 ;
@@ -162,20 +140,20 @@ attr:
 var_init:
     VAR ID (type)? (ASSIGN_VAR ((ID | value | function_call) COMMA?)+)?   # varInit
     | CONST ID (ASSIGN_VAR (ID | value | function_call))?       # constInit
-    | ID ASSIGN (ID | value | function_call | struct_instance)                    # withoutVarInit
+    | ID ASSIGN (ID | value | function_call)                    # withoutVarInit
     | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (ID | value | function_call) # multipleVarsInit
 ;
 
 var_update:
-    ID (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt)
-    | ID BRACKET_LEFT (ID | value | math_stmt) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt)
+    ID (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt | bool_stmt)
+    | ID BRACKET_LEFT (ID | value | math_stmt | bool_stmt) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt | bool_stmt)
 
     // assignment operator
-    | ID PLUS ASSIGN_VAR (ID | value | math_stmt)
-    | ID MINUS ASSIGN_VAR (ID | value | math_stmt)
-    | ID TIMES ASSIGN_VAR (ID | value | math_stmt)
+    | ID PLUS ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
+    | ID MINUS ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
+    | ID TIMES ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
 
-    | ID (BRACKET_LEFT (ID | value | math_stmt) BRACKET_RIGHT)? value_increase
+    | ID (BRACKET_LEFT (ID | value | math_stmt | bool_stmt) BRACKET_RIGHT)? value_increase
 ;
 
 // FUNCTIONS
@@ -193,7 +171,7 @@ function_stmt:
 ;
 
 return_stmt:
-    RETURN value?
+    RETURN (ID | value | function_call | math_stmt | bool_stmt)?
 ;
 
 // LOOP
