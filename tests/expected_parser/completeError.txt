@@ -1,2 +1,0 @@
-line 17:4 token recognition error at: '#'
-line 17:11 no viable alternative at input 'estecomentário'
