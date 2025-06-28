@@ -20,12 +20,12 @@ imports:
 ;
 
 init:
-    (PACKAGE ID)*
-    (imports)*
+    PACKAGE ID*
+    imports*
 ;
 
 stmt_sect:
-    (function_stmt)*
+    function_stmt*
 ;
 
 scope:
@@ -36,8 +36,7 @@ command:
     return_stmt
     | function_call
 
-    | var_init
-    | var_update
+    | var_assign
     
     | for_stmt
     | if_stmt
@@ -65,7 +64,7 @@ type:
     | TYPE_BOOL     # boolType
 
     // type composite
-    | BRACKET_LEFT (value)? BRACKET_RIGHT type                  # arrayType
+    | BRACKET_LEFT value? BRACKET_RIGHT type                  # arrayType
 ;
 
 // Value
@@ -107,16 +106,10 @@ math_operations:
 ;
 
 math_stmt: // retorna um valor numerico
-    (ID | value | function_call) math_operations?
-    | math_stmt math_stmt+
+    (ID | value | function_call) (math_operations (ID | value | function_call))*
 ;
 
 // Bool expressions
-bool_operations:
-    AND
-    | OR
-;
-
 compare:
     EQUAL
     | NOT_EQUAL
@@ -124,6 +117,9 @@ compare:
     | GREATER 
     | LESS_EQ  
     | GREATER_EQ
+    
+    | AND
+    | OR
 ;
 
 bool_stmt: // retorna um valor boolean
@@ -134,35 +130,21 @@ bool_stmt: // retorna um valor boolean
 
 // VARIABLES AND ATTRIBUTES
 attr:
-    ID (type)? (COMMA (ID (type)?))*
+    ID type? (COMMA ID type?)*
 ;
 
-var_init:
-    VAR ID (type)? (ASSIGN_VAR ((ID | value | function_call) COMMA?)+)?   # varInit
-    | CONST ID (ASSIGN_VAR (ID | value | function_call))?       # constInit
-    | ID ASSIGN (ID | value | function_call)                    # withoutVarInit
-    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (ID | value | function_call) # multipleVarsInit
-;
-
-var_update:
-    ID (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt | bool_stmt)
-    | ID BRACKET_LEFT (ID | value | math_stmt | bool_stmt) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt | bool_stmt)
-
-    // assignment operator
-    | ID PLUS ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
-    | ID MINUS ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
-    | ID TIMES ASSIGN_VAR (ID | value | math_stmt | bool_stmt)
-
-    | ID (BRACKET_LEFT (ID | value | math_stmt | bool_stmt) BRACKET_RIGHT)? value_increase
+var_assign:
+    (CONST | VAR) ID type? ASSIGN_VAR (ID | value | math_stmt | bool_stmt | function_call)
+    | ID ASSIGN (ID | value | math_stmt | bool_stmt | function_call)
 ;
 
 // FUNCTIONS
 function_declaration:
-    FUNCTION ID PAREN_LEFT (attr)? PAREN_RIGHT (type)?
+    FUNCTION ID PAREN_LEFT attr? PAREN_RIGHT type?
 ;
 
 function_call:
-    ID PAREN_LEFT ((ID | value | math_stmt | function_call) (COMMA)?)* PAREN_RIGHT
+    ID PAREN_LEFT ((ID | value | math_stmt | function_call) COMMA?)* PAREN_RIGHT
     | ID DOT function_call
 ;
 
@@ -203,13 +185,13 @@ for_stmt:
 
 // CONDICIONAL
 if_init:
-    (bool_stmt bool_operations?)+
+    bool_stmt
     | PAREN_LEFT bool_stmt PAREN_RIGHT
-    | var_init SEMICOLON bool_stmt
+    | var_assign SEMICOLON bool_stmt
 ;
 
 if_stmt:
-    IF if_init BRACE_LEFT scope BRACE_RIGHT (else_if_stmt)* (else_stmt)?
+    IF if_init BRACE_LEFT scope BRACE_RIGHT else_if_stmt* else_stmt?
 ;
 
 else_if_stmt:
