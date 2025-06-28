@@ -25,6 +25,7 @@ init:
 ;
 
 stmt_sect:
+    (struct_declaration)*
     (function_stmt)*
 ;
 
@@ -72,6 +73,15 @@ type:
     | MAP BRACKET_LEFT type BRACKET_RIGHT type                  # mapType
 ;
 
+// Struct
+struct_declaration:
+    TYPE ID STRUCT BRACE_LEFT (ID type)+ BRACE_RIGHT
+;
+
+struct_instance:
+    ID BRACE_LEFT (ID COLON (ID | value) COMMA?)* BRACE_RIGHT
+;
+
 // Value
 value_increase:
     PLUS PLUS
@@ -94,7 +104,7 @@ value:
 
     // value composite
     /// value array
-    | type BRACE_LEFT (value_assign)? BRACE_RIGHT
+    | BRACKET_LEFT value? BRACKET_RIGHT type BRACE_LEFT (value COMMA?)* BRACE_RIGHT
     | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
 
     /// inicialize map
@@ -110,25 +120,6 @@ value:
     | ID (DOT ID)+
 ;
 
-value_assign:
-    value
-    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)?
-    | function_call
-    | value_assign (COMMA value_assign)+
-
-    // type conversion
-    | type PAREN_LEFT value_assign PAREN_RIGHT
-
-    // math operations
-    | value_assign math_operations value_assign
-
-    // bool expressions
-    | ((value | ID | function_call) | NULL)
-    | ((value | ID | function_call) | NULL) compare ((value | ID | function_call) | NULL)
-    | ((value | ID | function_call) | NULL) compare PAREN_LEFT (value | ID | function_call) PAREN_RIGHT
-    | PAREN_LEFT (value | ID | function_call) PAREN_RIGHT compare ((value | ID | function_call) | NULL)
-;
-
 // Math expressions
 math_operations:
     PLUS
@@ -136,6 +127,10 @@ math_operations:
     | TIMES
     | DIV
     | MOD
+;
+
+math_stmt: // retorna um valor numerico
+    (ID | value) math_operations (ID | value)
 ;
 
 // Bool expressions
@@ -153,10 +148,10 @@ compare:
     | GREATER_EQ
 ;
 
-bool_stmt:
-    value_assign                                                                                    # boolStmtUniqueValue
-    | (NOT)? (PAREN_LEFT)? (NOT)? value_assign bool_operations (NOT)? value_assign (PAREN_RIGHT)?   # boolStmtOneOperation
-    | bool_stmt bool_operations bool_stmt                                                           # boolStmtMultiOperation
+bool_stmt: // retorna um valor boolean
+    (ID | value | math_stmt | NULL)
+    | bool_stmt compare bool_stmt
+    | NOT bool_stmt
 ;
 
 // VARIABLES AND ATTRIBUTES
@@ -165,22 +160,22 @@ attr:
 ;
 
 var_init:
-    VAR ID (type)? (ASSIGN_VAR value_assign)?   # varInit
-    | CONST ID (ASSIGN_VAR value_assign)?       # constInit
-    | ID ASSIGN value_assign                    # withoutVarInit
-    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) value_assign # multipleVarsInit
+    VAR ID (type)? (ASSIGN_VAR ((ID | value | function_call) COMMA?)+)?   # varInit
+    | CONST ID (ASSIGN_VAR (ID | value | function_call))?       # constInit
+    | ID ASSIGN (ID | value | function_call | struct_instance)                    # withoutVarInit
+    | (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* (ASSIGN | ASSIGN_VAR) (ID | value | function_call) # multipleVarsInit
 ;
 
 var_update:
-    ID (ASSIGN | ASSIGN_VAR) value_assign
-    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) value_assign
+    ID (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt)
+    | ID BRACKET_LEFT (ID | value | math_stmt) BRACKET_RIGHT (ASSIGN | ASSIGN_VAR) (ID | value | math_stmt)
 
     // assignment operator
-    | ID PLUS ASSIGN_VAR value_assign
-    | ID MINUS ASSIGN_VAR value_assign
-    | ID TIMES ASSIGN_VAR value_assign
+    | ID PLUS ASSIGN_VAR (ID | value | math_stmt)
+    | ID MINUS ASSIGN_VAR (ID | value | math_stmt)
+    | ID TIMES ASSIGN_VAR (ID | value | math_stmt)
 
-    | ID (BRACKET_LEFT (ID | value) BRACKET_RIGHT)? value_increase
+    | ID (BRACKET_LEFT (ID | value | math_stmt) BRACKET_RIGHT)? value_increase
 ;
 
 // FUNCTIONS
@@ -189,7 +184,7 @@ function_declaration:
 ;
 
 function_call:
-    ID PAREN_LEFT value_assign? PAREN_RIGHT
+    ID PAREN_LEFT ((ID | value | math_stmt | function_call) (COMMA)?)* PAREN_RIGHT
     | ID DOT function_call
 ;
 
@@ -198,12 +193,12 @@ function_stmt:
 ;
 
 return_stmt:
-    RETURN value_assign?
+    RETURN value?
 ;
 
 // LOOP
 for_init:
-    ID ASSIGN value_assign
+    ID ASSIGN value
 ;
 
 for_cond:
@@ -215,7 +210,7 @@ for_end:
 ;
 
 for_range:
-    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN RANGE ID
+    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN RANGE ID (DOT ID)?
 ;
 
 for_declaration:
@@ -230,9 +225,9 @@ for_stmt:
 
 // CONDICIONAL
 if_init:
-    bool_stmt                               # ifWithoutParen
-    | PAREN_LEFT bool_stmt PAREN_RIGHT      # ifWithParen
-    | var_init SEMICOLON bool_stmt          # ifWithVarInit
+    (bool_stmt bool_operations?)+
+    | PAREN_LEFT bool_stmt PAREN_RIGHT
+    | var_init SEMICOLON bool_stmt
 ;
 
 if_stmt:
