@@ -96,7 +96,7 @@ value:
     | type PAREN_LEFT (ID | value | function_call | math_stmt) PAREN_RIGHT
 
     /// value prop
-    ID (DOT ID)*
+    ID (DOT ID)+
 ;
 
 // Math expressions
@@ -139,7 +139,7 @@ attr:
 var_assign:
     (CONST | VAR)? ID type?
     | (CONST | VAR)? ID type? math_operations? (ASSIGN_VAR | ASSIGN) (ID | value | math_stmt | bool_stmt | function_call)
-    | ID math_operations math_operations
+    | ID value_increase
 ;
 
 // FUNCTIONS
