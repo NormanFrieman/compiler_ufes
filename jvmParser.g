@@ -15,8 +15,8 @@ program:
 ;
 
 imports:
-    IMPORT STRING_VALUE                                 # simpleImport
-    | IMPORT PAREN_LEFT (STRING_VALUE)+ PAREN_RIGHT     # multiImport
+    IMPORT STRING_VALUE # simpleImport
+    | IMPORT PAREN_LEFT (STRING_VALUE (COMMA STRING_VALUE)*) PAREN_RIGHT # multiImport
 ;
 
 init:
@@ -148,8 +148,8 @@ function_declaration:
 ;
 
 function_call:
-    ID PAREN_LEFT ((ID | value | math_stmt | function_call) COMMA?)* PAREN_RIGHT
-    | ID DOT function_call
+    parent=ID PAREN_LEFT ((ID | value | math_stmt | function_call) (COMMA (ID | value | math_stmt | function_call))*)? PAREN_RIGHT # functionWithParam
+    | parent=ID DOT function_call # functionRecursive
 ;
 
 function_stmt:

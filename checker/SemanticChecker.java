@@ -3,6 +3,7 @@ package checker;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.antlr.v4.runtime.Token;
 import generated.jvmParser;
 import generated.jvmParser.ValueContext;
@@ -97,6 +98,18 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
         Token token = ctx.STRING_VALUE().getSymbol();
         String importName = token.getText();
         il.add(importName.replaceAll("\"", ""));
+        return null;
+    }
+
+    @Override
+    public Void visitMultiImport(jvmParser.MultiImportContext ctx) {
+        List<String> importNames = ctx.STRING_VALUE()
+            .stream()
+            .map(x -> x.getText().replaceAll("\"", ""))
+            .collect(Collectors.toList());
+        
+        il.addAll(importNames);
+
         return null;
     }
 
@@ -234,6 +247,23 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
         this.lastType = arrayType;
         
+        return null;
+    }
+
+    // @Override
+    // public Void visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+
+    // }
+
+    @Override
+    public Void visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
+        String parentName = ctx.parent.getText();
+        boolean isDeclared = il.stream().anyMatch(x -> x.equals(parentName));
+        if (!isDeclared) {
+            System.err.println("ERROR: undefined " + parentName);
+            System.exit(1);
+        }
+
         return null;
     }
 }
