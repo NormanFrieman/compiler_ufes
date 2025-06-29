@@ -104,6 +104,11 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     public Void visitVarWithValue(jvmParser.VarWithValueContext ctx) {
         Token varInit = ctx.varInit;
 
+        if (ctx.CONST() != null && ctx.ASSIGN() != null) {
+            System.out.println("ERROR: unexpected :=, expecting =");
+            System.exit(1);
+        }
+        
         if (ctx.value() != null) {
             visit(ctx.value());
             VariableType typeAssign = lastType.newInstance();
