@@ -16,7 +16,7 @@ program:
 
 imports:
     IMPORT STRING_VALUE # simpleImport
-    | IMPORT PAREN_LEFT (STRING_VALUE (COMMA STRING_VALUE)*) PAREN_RIGHT # multiImport
+    | IMPORT PAREN_LEFT (STRING_VALUE SEMICOLON?)* PAREN_RIGHT # multiImport
 ;
 
 init:

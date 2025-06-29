@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"strings"
+	"fmt";
+	"strings";
 )
 
 // Função simples que retorna um valor
