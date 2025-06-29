@@ -24,4 +24,8 @@ public class Variable {
     public boolean getIsConst() {
         return IsConst;
     }
+
+    public VariableType getType() {
+        return Type;
+    }
 }

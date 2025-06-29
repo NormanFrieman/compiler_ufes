@@ -1,1 +1,1 @@
-ERROR: undefined fmt
+ERROR: undefined fmt in line 6

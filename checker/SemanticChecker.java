@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.antlr.v4.runtime.Token;
 import generated.jvmParser;
 import generated.jvmParser.ValueContext;
@@ -275,7 +276,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             String varName = var.getText();
             boolean isDeclared = vt.stream().anyMatch(x -> x.getName().equals(varName));
             if (!isDeclared)
-                errors.add("ERROR: undefined " + varName);
+                errors.add("ERROR: undefined " + varName + " in line " + var.getLine());
         });
         
         if (errors.size() > 0) {
@@ -291,11 +292,43 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
         String parentName = ctx.parent.getText();
         boolean isDeclared = il.stream().anyMatch(x -> x.equals(parentName));
         if (!isDeclared) {
-            System.err.println("ERROR: undefined " + parentName);
+            System.err.println("ERROR: undefined " + parentName + " in line " + ctx.parent.getLine());
             System.exit(1);
         }
 
         visit(ctx.function_call());
+
+        return null;
+    }
+
+    @Override
+    public Void visitFor_init(jvmParser.For_initContext ctx) {
+        Token var = ctx.ID().getSymbol();
+        visit(ctx.value());
+
+        vt.add(new Variable(var.getText(), var.getLine(), lastType, false));
+
+        return null;
+    }
+
+    @Override
+    public Void visitFor_range(jvmParser.For_rangeContext ctx) {
+        List<Token> vars = ctx.ID()
+            .stream()
+            .map(x -> x.getSymbol())
+            .collect(Collectors.toList());
+        
+        Token lastVar = vars.remove(vars.size() - 1);
+        Variable lastVarDeclaration = vt.stream().filter(x -> x.getName().equals(lastVar.getText())).collect(Collectors.toList()).get(0);
+        if (lastVarDeclaration == null) {
+            System.err.println("ERROR: undefined " + lastVar + " in line " + lastVar.getLine());
+            System.exit(1);
+        }
+
+        vars.forEach(var -> {
+            int type = lastVarDeclaration.getType().getType();
+            vt.add(new Variable(var.getText(), var.getLine(), new VariableType(type, false, -1), false));
+        });
 
         return null;
     }

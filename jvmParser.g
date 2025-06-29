@@ -174,7 +174,7 @@ for_end:
 ;
 
 for_range:
-    (ID | UNDERSCORE) (COMMA (ID | UNDERSCORE))* ASSIGN RANGE ID (DOT ID)?
+    ID (COMMA ID)* ASSIGN RANGE ID
 ;
 
 for_declaration:
