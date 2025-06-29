@@ -1,6 +1,7 @@
 package checker;
 
 import checker.utils.Types;
+import generated.jvmParser;
 
 public class VariableType implements Comparable<VariableType> {
     public int Type;
@@ -31,6 +32,11 @@ public class VariableType implements Comparable<VariableType> {
 
     @Override
     public int compareTo(VariableType arg0) {
+        if (
+            (arg0.getType() == jvmParser.TYPE_FLOAT32 && this.getType() == jvmParser.TYPE_FLOAT64)
+            || (arg0.getType() == jvmParser.TYPE_FLOAT64 && this.getType() == jvmParser.TYPE_FLOAT32))
+            return 0;
+        
         return
             Integer.compare(this.getType(), arg0.getType())
             + Boolean.compare(this.getIsArray(), arg0.getIsArray())

@@ -58,13 +58,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
 	@Override
     public Void visitFloat32Type(jvmParser.Float32TypeContext ctx) {
-        this.lastType = new VariableType(jvmParser.TYPE_INT32, false, -1);
+        this.lastType = new VariableType(jvmParser.TYPE_FLOAT32, false, -1);
         return null;
     }
 
 	@Override
     public Void visitFloat64Type(jvmParser.Float64TypeContext ctx) {
-        this.lastType = new VariableType(jvmParser.TYPE_INT64, false, -1);
+        this.lastType = new VariableType(jvmParser.TYPE_FLOAT64, false, -1);
         return null;
     }
 
