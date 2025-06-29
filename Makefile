@@ -20,8 +20,6 @@ PARSER=${ROOT}/${GRAMMAR_NAME}Parser.g
 
 IN=${ROOT}/tests/casetests
 
-INCHECKER=${ROOT}/tests/casetests_checker
-
 GEN_PATH=generated
 
 BIN_PATH=bin
@@ -51,7 +49,7 @@ parserGui:
 
 # Executa o main
 run:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(INCHECKER)/$(FILE)
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE)
 
 # Remove os arquivos gerados
 clean:
