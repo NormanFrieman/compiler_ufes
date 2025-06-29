@@ -1,0 +1,2 @@
+line 8:10 no viable alternative at input 'foriin'
+line 8:18 mismatched input '{' expecting {'uint', 'int', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64', 'string', 'bool', 'var', 'const', 'return', 'for', 'if', 'break', 'continue', 'goto', '}', '[', ID}

@@ -1,0 +1,2 @@
+line 9:20 token recognition error at: '"Positive)\n    }\n}\n'
+line 12:0 mismatched input '<EOF>' expecting {'uint', 'int', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64', 'string', 'bool', 'true', 'false', '[', ')', INT_DEC, INT_HEX, INT_OCT, INT_BIN, FLOAT_LITERAL, ID, STRING_VALUE, NEGATIVE_FLOAT_LITERAL, CHAR_VALUE, NEGATIVE_INT_VALUE}

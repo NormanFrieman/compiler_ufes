@@ -8,7 +8,7 @@ GRAMMAR_NAME=jvm
 GEN_PATH=$ROOT/generated
 BIN_PATH=$ROOT/bin
 
-IN=$ROOT/tests/casetests_checker
+IN=$ROOT/tests/casetests
 TEST=$ROOT/tests/expected_checker
 
 GREEN='\e[32m'

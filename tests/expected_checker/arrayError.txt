@@ -1,0 +1,2 @@
+line 4:9 extraneous input 'map' expecting {'uint', 'int', 'int8', 'int16', 'int32', 'int64', 'float32', 'float64', 'string', 'bool', 'true', 'false', 'nil', '!', '[', INT_DEC, INT_HEX, INT_OCT, INT_BIN, FLOAT_LITERAL, ID, STRING_VALUE, NEGATIVE_FLOAT_LITERAL, CHAR_VALUE, NEGATIVE_INT_VALUE}
+line 4:19 no viable alternative at input '[string]'
