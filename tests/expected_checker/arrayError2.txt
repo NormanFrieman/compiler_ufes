@@ -1,0 +1,1 @@
+ERROR: cannot use [5]int as type [4]int in assignment

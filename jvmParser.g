@@ -64,7 +64,7 @@ type:
     | TYPE_BOOL     # boolType
 
     // type composite
-    | BRACKET_LEFT value? BRACKET_RIGHT type                  # arrayType
+    | BRACKET_LEFT size=value? BRACKET_RIGHT type                  # arrayType
 ;
 
 // Value
@@ -75,28 +75,28 @@ value_increase:
 
 value:
     // value primitive
-    INT_DEC
-    | INT_HEX
-    | INT_OCT
-    | INT_BIN
-    | NEGATIVE_INT_VALUE
-    | FLOAT_LITERAL
-    | NEGATIVE_FLOAT_LITERAL
-    | STRING_VALUE
-    | CHAR_VALUE
-    | TRUE
-    | FALSE
+    INT_DEC # valueIntD
+    | INT_HEX # valueIntH
+    | INT_OCT # valueIntO
+    | INT_BIN # valueIntB
+    | NEGATIVE_INT_VALUE # valueIntN
+    | FLOAT_LITERAL # valueFloat
+    | NEGATIVE_FLOAT_LITERAL # valueFloatN
+    | STRING_VALUE # valueString
+    | CHAR_VALUE # valueChar
+    | TRUE # valueTrue
+    | FALSE # valueFalse
 
     // value composite
     /// value array
-    | BRACKET_LEFT value? BRACKET_RIGHT type BRACE_LEFT (value COMMA?)* BRACE_RIGHT
-    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT
+    | BRACKET_LEFT size=value? BRACKET_RIGHT type BRACE_LEFT (value (COMMA value)*)? BRACE_RIGHT # valueArrayInit
+    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT # valueArrayGet
 
     /// value conversion
-    | type PAREN_LEFT (ID | value | function_call | math_stmt) PAREN_RIGHT
+    | type PAREN_LEFT (ID | value | function_call | math_stmt) PAREN_RIGHT # valueConversion
 
     /// value prop
-    | ID (DOT ID)+
+    | ID (DOT ID)+ # valueProp
 ;
 
 // Math expressions
@@ -137,9 +137,9 @@ attr:
 ;
 
 var_assign:
-    (CONST | VAR)? ID type?
-    | (CONST | VAR)? ID type? math_operations? (ASSIGN_VAR | ASSIGN) (ID | value | math_stmt | bool_stmt | function_call)
-    | ID value_increase
+    (CONST | VAR)? ID type? # varWithoutValue
+    | (CONST | VAR)? varInit=ID type? math_operations? (ASSIGN_VAR | ASSIGN) (ID | value | math_stmt | bool_stmt | function_call) #varWithValue
+    | ID value_increase # varWithIncrease
 ;
 
 // FUNCTIONS
