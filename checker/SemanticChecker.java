@@ -114,6 +114,16 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
+        Token var = ctx.ID().getSymbol();
+
+        visit(ctx.type());
+
+        vt.add(new Variable(var.getText(), var.getLine(), lastType, ctx.CONST() != null));
+        return null;
+    }
+
+    @Override
     public Void visitVarWithValue(jvmParser.VarWithValueContext ctx) {
         Token varInit = ctx.varInit;
 
@@ -241,7 +251,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             }
         });
         if (errors.size() > 0) {
-            errors.forEach(err -> System.out.println(err));
+            errors.forEach(err -> System.err.println(err));
             System.exit(1);
         }
 
@@ -250,10 +260,31 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
         return null;
     }
 
-    // @Override
-    // public Void visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+    @Override
+    public Void visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+        List<Token> vars = ctx.ID()
+            .stream()
+            .map(x -> x.getSymbol())
+            .collect(Collectors.toList());
+        
+        if (ctx.parent != null)
+            vars.remove(0);
 
-    // }
+        List<String> errors = new ArrayList<String>();
+        vars.forEach(var -> {
+            String varName = var.getText();
+            boolean isDeclared = vt.stream().anyMatch(x -> x.getName().equals(varName));
+            if (!isDeclared)
+                errors.add("ERROR: undefined " + varName);
+        });
+        
+        if (errors.size() > 0) {
+            errors.forEach(err -> System.err.println(err));
+            System.exit(1);
+        }
+
+        return null;
+    }
 
     @Override
     public Void visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
@@ -263,6 +294,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             System.err.println("ERROR: undefined " + parentName);
             System.exit(1);
         }
+
+        visit(ctx.function_call());
 
         return null;
     }
