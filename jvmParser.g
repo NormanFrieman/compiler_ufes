@@ -96,7 +96,7 @@ value:
     | type PAREN_LEFT (ID | value | function_call | math_stmt) PAREN_RIGHT
 
     /// value prop
-    ID (DOT ID)+
+    | ID (DOT ID)+
 ;
 
 // Math expressions
