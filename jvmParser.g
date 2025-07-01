@@ -160,6 +160,11 @@ return_stmt:
     RETURN (ID | value | function_call | math_stmt | bool_stmt)?
 ;
 
+// CRIAR O EXPR
+adawdaw:
+    ID | value | function_call | math_stmt | bool_stmt | NULL
+;
+
 // LOOP
 for_init:
     ID ASSIGN value

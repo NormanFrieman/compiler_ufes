@@ -4,19 +4,20 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.antlr.v4.runtime.Token;
 import generated.jvmParser;
 import generated.jvmParser.ValueContext;
 import generated.jvmParserBaseVisitor;
+import checker.utils.Scope;
 import checker.utils.Types;
 
 public class SemanticChecker extends jvmParserBaseVisitor<Void> {
-    private LinkedList<String> st = new LinkedList<String>();
-    private LinkedList<Variable> vt = new LinkedList<Variable>();
+    // Scopes
+    private LinkedList<Scope> scopes = new LinkedList<Scope>();
+    private Scope lastScope;
 
     // Import list
-    private LinkedList<String> il = new LinkedList<String>();
+    private LinkedList<String> imports = new LinkedList<String>();
 
     // Last declared type
     private VariableType lastType;
@@ -93,12 +94,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     }
     //#endregion
 
-    // Adiciona os imports na lista il
+    //region Imports
     @Override
     public Void visitSimpleImport(jvmParser.SimpleImportContext ctx) {
         Token token = ctx.STRING_VALUE().getSymbol();
         String importName = token.getText();
-        il.add(importName.replaceAll("\"", ""));
+        imports.add(importName.replaceAll("\"", ""));
         return null;
     }
 
@@ -109,18 +110,22 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             .map(x -> x.getText().replaceAll("\"", ""))
             .collect(Collectors.toList());
         
-        il.addAll(importNames);
+        imports.addAll(importNames);
 
         return null;
     }
+    //#endregion
 
+    //#region Var assign
     @Override
     public Void visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
         Token var = ctx.ID().getSymbol();
 
         visit(ctx.type());
 
-        vt.add(new Variable(var.getText(), var.getLine(), lastType, ctx.CONST() != null));
+        lastScope.AddVar(
+            new Variable(var.getText(), var.getLine(), lastType, ctx.CONST() != null)
+        );
         return null;
     }
 
@@ -148,11 +153,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             }
 
             Variable var = new Variable(varInit.getText(), ctx.varInit.getLine(), typeAssign, ctx.CONST() != null);
-            vt.add(var);
+            lastScope.AddVar(var);
         }
         
         return null;
     }
+    //#endregion
 
     //#region Visit primitive values
     @Override
@@ -222,6 +228,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     }
     //#endregion
 
+    //#region Visit Composite values
     @Override
     public Void visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
         List<ValueContext> values = ctx.value();
@@ -273,10 +280,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
         List<String> errors = new ArrayList<String>();
         vars.forEach(var -> {
-            String varName = var.getText();
-            boolean isDeclared = vt.stream().anyMatch(x -> x.getName().equals(varName));
+            boolean isDeclared = lastScope.IsDeclared(var);
             if (!isDeclared)
-                errors.add("ERROR: undefined " + varName + " in line " + var.getLine());
+                errors.add("ERROR: undefined " + var.getText() + " in line " + var.getLine());
         });
         
         if (errors.size() > 0) {
@@ -290,7 +296,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     @Override
     public Void visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
         String parentName = ctx.parent.getText();
-        boolean isDeclared = il.stream().anyMatch(x -> x.equals(parentName));
+        boolean isDeclared = imports.stream().anyMatch(x -> x.equals(parentName));
         if (!isDeclared) {
             System.err.println("ERROR: undefined " + parentName + " in line " + ctx.parent.getLine());
             System.exit(1);
@@ -300,13 +306,15 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
         return null;
     }
+    //#endregion
 
+    //#region For
     @Override
     public Void visitFor_init(jvmParser.For_initContext ctx) {
         Token var = ctx.ID().getSymbol();
         visit(ctx.value());
 
-        vt.add(new Variable(var.getText(), var.getLine(), lastType, false));
+        lastScope.AddVar(new Variable(var.getText(), var.getLine(), lastType, false));
 
         return null;
     }
@@ -319,26 +327,29 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
             .collect(Collectors.toList());
         
         Token lastVar = vars.remove(vars.size() - 1);
-        Variable lastVarDeclaration = vt.stream().filter(x -> x.getName().equals(lastVar.getText())).collect(Collectors.toList()).get(0);
-        if (lastVarDeclaration == null) {
-            System.err.println("ERROR: undefined " + lastVar + " in line " + lastVar.getLine());
+        boolean isDeclared = lastScope.IsDeclared(lastVar);
+        if (!isDeclared) {
+            System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
             System.exit(1);
         }
+        Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
 
         vars.forEach(var -> {
             int type = lastVarDeclaration.getType().getType();
-            vt.add(new Variable(var.getText(), var.getLine(), new VariableType(type, false, -1), false));
+            lastScope.AddVar(new Variable(var.getText(), var.getLine(), new VariableType(type, false, -1), false));
         });
 
         return null;
     }
-    
+    //#endregion
+
+    //#region Scopes
     @Override
     public Void visitBoolStmtDefault(jvmParser.BoolStmtDefaultContext ctx) {
         if (ctx.ID() != null) {
             Token var = ctx.ID().getSymbol();
 
-            boolean isDeclared = vt.stream().anyMatch(x -> x.getName().equals(var.getText()));
+            boolean isDeclared = lastScope.IsDeclared(var);
             if (!isDeclared) {
                 System.err.println("ERROR: undefined " + var.getText() + " in line " + var.getLine());
                 System.exit(1);
@@ -352,4 +363,21 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
         ctx.bool_stmt().forEach(stmt -> visit(stmt));
         return null;
     }
+
+    @Override
+    public Void visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
+        int init = ctx.BRACE_LEFT().getSymbol().getLine();
+        int end = ctx.BRACE_RIGHT().getSymbol().getLine();
+
+        Scope scope = new Scope();
+        scope.setInit(init);
+        scope.setEnd(end);
+
+        scopes.add(scope);
+        lastScope = scope;
+
+        return visit(ctx.scope());
+    }
+    //#endregion
+
 }
