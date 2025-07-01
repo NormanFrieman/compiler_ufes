@@ -332,4 +332,24 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
 
         return null;
     }
+    
+    @Override
+    public Void visitBoolStmtDefault(jvmParser.BoolStmtDefaultContext ctx) {
+        if (ctx.ID() != null) {
+            Token var = ctx.ID().getSymbol();
+
+            boolean isDeclared = vt.stream().anyMatch(x -> x.getName().equals(var.getText()));
+            if (!isDeclared) {
+                System.err.println("ERROR: undefined " + var.getText() + " in line " + var.getLine());
+                System.exit(1);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitBoolStmtCompare(jvmParser.BoolStmtCompareContext ctx) {
+        ctx.bool_stmt().forEach(stmt -> visit(stmt));
+        return null;
+    }
 }

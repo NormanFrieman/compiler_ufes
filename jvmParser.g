@@ -126,9 +126,9 @@ compare:
 ;
 
 bool_stmt: // retorna um valor boolean
-    (ID | value | function_call | math_stmt | NULL)
-    | bool_stmt compare bool_stmt
-    | NOT bool_stmt
+    (ID | value | function_call | math_stmt | NULL) # boolStmtDefault
+    | bool_stmt compare bool_stmt # boolStmtCompare
+    | NOT bool_stmt # boolStmtNot
 ;
 
 // VARIABLES AND ATTRIBUTES
