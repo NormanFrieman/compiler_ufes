@@ -47,6 +47,16 @@ command:
     | goto_call
 ;
 
+expr:
+    ID                              # exprId
+    | value                         # exprValue
+    | function_call                 # exprFunctionCall
+    | NULL                          # exprNull
+    | expr math_operations expr     # exprMath
+    | expr compare expr             # exprBool
+    | NOT expr                      # exprNotBool
+;
+
 // VALUES AND TYPES
 
 // Type
@@ -89,11 +99,11 @@ value:
 
     // value composite
     /// value array
-    | BRACKET_LEFT size=value? BRACKET_RIGHT type BRACE_LEFT (value (COMMA value)*)? BRACE_RIGHT # valueArrayInit
-    | ID BRACKET_LEFT (ID | value) BRACKET_RIGHT # valueArrayGet
+    | BRACKET_LEFT size=expr? BRACKET_RIGHT type BRACE_LEFT (expr (COMMA expr)*)? BRACE_RIGHT # valueArrayInit
+    | ID BRACKET_LEFT expr BRACKET_RIGHT # valueArrayGet
 
     /// value conversion
-    | type PAREN_LEFT (ID | value | function_call | math_stmt) PAREN_RIGHT # valueConversion
+    | type PAREN_LEFT expr PAREN_RIGHT # valueConversion
 
     /// value prop
     | ID (DOT ID)+ # valueProp
@@ -106,10 +116,6 @@ math_operations:
     | TIMES
     | DIV
     | MOD
-;
-
-math_stmt: // retorna um valor numerico
-    (ID | value | function_call) (math_operations (ID | value | function_call))*
 ;
 
 // Bool expressions
@@ -125,12 +131,6 @@ compare:
     | OR
 ;
 
-bool_stmt: // retorna um valor boolean
-    (ID | value | function_call | math_stmt | NULL) # boolStmtDefault
-    | bool_stmt compare bool_stmt # boolStmtCompare
-    | NOT bool_stmt # boolStmtNot
-;
-
 // VARIABLES AND ATTRIBUTES
 attr:
     ID type? (COMMA ID type?)*
@@ -138,7 +138,7 @@ attr:
 
 var_assign:
     (CONST | VAR)? ID type? # varWithoutValue
-    | (CONST | VAR)? varInit=ID type? math_operations? (ASSIGN_VAR | ASSIGN) (ID | value | math_stmt | bool_stmt | function_call) #varWithValue
+    | (CONST | VAR)? varInit=ID type? math_operations? (ASSIGN_VAR | ASSIGN) expr #varWithValue
     | ID value_increase # varWithIncrease
 ;
 
@@ -148,7 +148,7 @@ function_declaration:
 ;
 
 function_call:
-    parent=ID PAREN_LEFT ((ID | value | math_stmt | function_call) (COMMA (ID | value | math_stmt | function_call))*)? PAREN_RIGHT # functionWithParam
+    parent=ID PAREN_LEFT (expr (COMMA expr)*)? PAREN_RIGHT # functionWithParam
     | parent=ID DOT function_call # functionRecursive
 ;
 
@@ -157,12 +157,7 @@ function_stmt:
 ;
 
 return_stmt:
-    RETURN (ID | value | function_call | math_stmt | bool_stmt)?
-;
-
-// CRIAR O EXPR
-adawdaw:
-    ID | value | function_call | math_stmt | bool_stmt | NULL
+    RETURN expr?
 ;
 
 // LOOP
@@ -194,9 +189,9 @@ for_stmt:
 
 // CONDICIONAL
 if_init:
-    bool_stmt
-    | PAREN_LEFT bool_stmt PAREN_RIGHT
-    | var_assign SEMICOLON bool_stmt
+    expr
+    | PAREN_LEFT expr PAREN_RIGHT
+    | var_assign SEMICOLON expr
 ;
 
 if_stmt:

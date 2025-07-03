@@ -129,35 +129,35 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visitVarWithValue(jvmParser.VarWithValueContext ctx) {
-        Token varInit = ctx.varInit;
+    // @Override
+    // public Void visitVarWithValue(jvmParser.VarWithValueContext ctx) {
+    //     Token varInit = ctx.varInit;
 
-        if (ctx.CONST() != null && ctx.ASSIGN() != null) {
-            System.out.println("ERROR: unexpected :=, expecting =");
-            System.exit(1);
-        }
+    //     if (ctx.CONST() != null && ctx.ASSIGN() != null) {
+    //         System.out.println("ERROR: unexpected :=, expecting =");
+    //         System.exit(1);
+    //     }
         
-        if (ctx.value() != null) {
-            visit(ctx.value());
-            VariableType typeAssign = lastType.newInstance();
+    //     if (ctx.value() != null) {
+    //         visit(ctx.value());
+    //         VariableType typeAssign = lastType.newInstance();
 
-            if (ctx.type() != null) {
-                visit(ctx.type());
-                VariableType varType = lastType.newInstance();
+    //         if (ctx.type() != null) {
+    //             visit(ctx.type());
+    //             VariableType varType = lastType.newInstance();
     
-                if (varType.compareTo(typeAssign) != 0) {
-                    System.err.println("ERROR: cannot use " + typeAssign.print() + " as type " + varType.print() + " in assignment");
-                    System.exit(1);
-                }
-            }
+    //             if (varType.compareTo(typeAssign) != 0) {
+    //                 System.err.println("ERROR: cannot use " + typeAssign.print() + " as type " + varType.print() + " in assignment");
+    //                 System.exit(1);
+    //             }
+    //         }
 
-            Variable var = new Variable(varInit.getText(), ctx.varInit.getLine(), typeAssign, ctx.CONST() != null);
-            lastScope.AddVar(var);
-        }
+    //         Variable var = new Variable(varInit.getText(), ctx.varInit.getLine(), typeAssign, ctx.CONST() != null);
+    //         lastScope.AddVar(var);
+    //     }
         
-        return null;
-    }
+    //     return null;
+    // }
     //#endregion
 
     //#region Visit primitive values
@@ -229,69 +229,69 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     //#endregion
 
     //#region Visit Composite values
-    @Override
-    public Void visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
-        List<ValueContext> values = ctx.value();
+    // @Override
+    // public Void visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
+    //     List<ValueContext> values = ctx.value();
 
-        int maxSize = ctx.size == null ? -1 : Integer.parseInt(ctx.size.getText());
-        if (maxSize != -1)
-            values.remove(0);
-        int sizeValues = values.size();
+    //     int maxSize = ctx.size == null ? -1 : Integer.parseInt(ctx.size.getText());
+    //     if (maxSize != -1)
+    //         values.remove(0);
+    //     int sizeValues = values.size();
         
-        if (maxSize != -1 && sizeValues > maxSize) {
-            System.err.println("ERROR: array index " + maxSize + " out of bounds");
-            System.exit(1);
-        }
+    //     if (maxSize != -1 && sizeValues > maxSize) {
+    //         System.err.println("ERROR: array index " + maxSize + " out of bounds");
+    //         System.exit(1);
+    //     }
 
-        visit(ctx.type());
-        VariableType arrayType = new VariableType(lastType.getType(), true, maxSize);
+    //     visit(ctx.type());
+    //     VariableType arrayType = new VariableType(lastType.getType(), true, maxSize);
 
-        List<String> errors = new ArrayList<String>();
-        values.forEach(value -> {
-            visit(value);
-            if (this.lastType.getType() != arrayType.getType()) {
-                errors.add(
-                    "ERROR: cannot use " + value.getText() + " (type "
-                    + Types.Names.get(this.lastType.getType())
-                    + ")" + " as type "
-                    + Types.Names.get(arrayType.getType())
-                    + " in array or slice literal");
-            }
-        });
-        if (errors.size() > 0) {
-            errors.forEach(err -> System.err.println(err));
-            System.exit(1);
-        }
+    //     List<String> errors = new ArrayList<String>();
+    //     values.forEach(value -> {
+    //         visit(value);
+    //         if (this.lastType.getType() != arrayType.getType()) {
+    //             errors.add(
+    //                 "ERROR: cannot use " + value.getText() + " (type "
+    //                 + Types.Names.get(this.lastType.getType())
+    //                 + ")" + " as type "
+    //                 + Types.Names.get(arrayType.getType())
+    //                 + " in array or slice literal");
+    //         }
+    //     });
+    //     if (errors.size() > 0) {
+    //         errors.forEach(err -> System.err.println(err));
+    //         System.exit(1);
+    //     }
 
-        this.lastType = arrayType;
+    //     this.lastType = arrayType;
         
-        return null;
-    }
+    //     return null;
+    // }
 
-    @Override
-    public Void visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
-        List<Token> vars = ctx.ID()
-            .stream()
-            .map(x -> x.getSymbol())
-            .collect(Collectors.toList());
+    // @Override
+    // public Void visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+    //     List<Token> vars = ctx.ID()
+    //         .stream()
+    //         .map(x -> x.getSymbol())
+    //         .collect(Collectors.toList());
         
-        if (ctx.parent != null)
-            vars.remove(0);
+    //     if (ctx.parent != null)
+    //         vars.remove(0);
 
-        List<String> errors = new ArrayList<String>();
-        vars.forEach(var -> {
-            boolean isDeclared = lastScope.IsDeclared(var);
-            if (!isDeclared)
-                errors.add("ERROR: undefined " + var.getText() + " in line " + var.getLine());
-        });
+    //     List<String> errors = new ArrayList<String>();
+    //     vars.forEach(var -> {
+    //         boolean isDeclared = lastScope.IsDeclared(var);
+    //         if (!isDeclared)
+    //             errors.add("ERROR: undefined " + var.getText() + " in line " + var.getLine());
+    //     });
         
-        if (errors.size() > 0) {
-            errors.forEach(err -> System.err.println(err));
-            System.exit(1);
-        }
+    //     if (errors.size() > 0) {
+    //         errors.forEach(err -> System.err.println(err));
+    //         System.exit(1);
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
 
     @Override
     public Void visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
@@ -344,25 +344,25 @@ public class SemanticChecker extends jvmParserBaseVisitor<Void> {
     //#endregion
 
     //#region Scopes
-    @Override
-    public Void visitBoolStmtDefault(jvmParser.BoolStmtDefaultContext ctx) {
-        if (ctx.ID() != null) {
-            Token var = ctx.ID().getSymbol();
+    // @Override
+    // public Void visitBoolStmtDefault(jvmParser.BoolStmtDefaultContext ctx) {
+    //     if (ctx.ID() != null) {
+    //         Token var = ctx.ID().getSymbol();
 
-            boolean isDeclared = lastScope.IsDeclared(var);
-            if (!isDeclared) {
-                System.err.println("ERROR: undefined " + var.getText() + " in line " + var.getLine());
-                System.exit(1);
-            }
-        }
-        return null;
-    }
+    //         boolean isDeclared = lastScope.IsDeclared(var);
+    //         if (!isDeclared) {
+    //             System.err.println("ERROR: undefined " + var.getText() + " in line " + var.getLine());
+    //             System.exit(1);
+    //         }
+    //     }
+    //     return null;
+    // }
 
-    @Override
-    public Void visitBoolStmtCompare(jvmParser.BoolStmtCompareContext ctx) {
-        ctx.bool_stmt().forEach(stmt -> visit(stmt));
-        return null;
-    }
+    // @Override
+    // public Void visitBoolStmtCompare(jvmParser.BoolStmtCompareContext ctx) {
+    //     ctx.bool_stmt().forEach(stmt -> visit(stmt));
+    //     return null;
+    // }
 
     @Override
     public Void visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
