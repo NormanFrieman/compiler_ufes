@@ -74,7 +74,7 @@ type:
     | TYPE_BOOL     # boolType
 
     // type composite
-    | BRACKET_LEFT size=value? BRACKET_RIGHT type                  # arrayType
+    | BRACKET_LEFT size=value? BRACKET_RIGHT type # arrayType
 ;
 
 // Value
