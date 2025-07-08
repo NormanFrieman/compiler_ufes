@@ -4,8 +4,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.antlr.v4.runtime.Token;
 import generated.jvmParser;
+import generated.jvmParser.ExprValueContext;
 import generated.jvmParserBaseVisitor;
 import checker.utils.JvmType;
 import checker.utils.Scope;
@@ -95,7 +98,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     @Override
     public VariableType visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
-        boolean isDeclared = this.lastScope.IsDeclared(id.getText());
+        boolean isDeclared = this.lastScope.VarIsDeclared(id.getText());
         if (!isDeclared) {
             System.err.println("ERROR: undefined " + id.getText() + " in line " + id.getLine());
             System.exit(1);
@@ -214,7 +217,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         Token varInicialize = ctx.varInit;
 
         if (ctx.CONST() != null && ctx.ASSIGN() != null) {
-            System.out.println("ERROR: unexpected :=, expecting =");
+            System.err.println("ERROR: unexpected :=, expecting =");
             System.exit(1);
         }
 
@@ -226,7 +229,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             System.exit(1);
         }
         
-        Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeAssign, ctx.CONST() != null);
+        VariableType typeVar = typeAssign != null ? typeAssign : typeValue;
+        Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeVar, ctx.CONST() != null);
         lastScope.AddVar(var);
 
         return null;
@@ -302,69 +306,79 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     //#endregion
 
     //#region Visit Composite values
-    // @Override
-    // public VariableType visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
-    //     List<ValueContext> values = ctx.value();
+    @Override
+    public VariableType visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
+        VariableType sizeType = (ctx.size != null) ? visit(ctx.size) : null;
+        VariableType expectedSizeType = new VariableType(JvmType.INT, false, -1);
 
-    //     int maxSize = ctx.size == null ? -1 : Integer.parseInt(ctx.size.getText());
-    //     if (maxSize != -1)
-    //         values.remove(0);
-    //     int sizeValues = values.size();
+        // Check if size value is int
+        if (sizeType != null && expectedSizeType.compareTo(sizeType) != 0){ 
+            System.err.println("ERROR: size of array must be int value");
+            System.exit(1);
+        }
+
+        // Check if values of array are compatible with type
+        VariableType typeArray = visit(ctx.type());
+        ctx.values.forEach(value -> {
+            VariableType valueType = visit(value);
+            if (typeArray.compareTo(valueType) != 0) {
+                String nameTypeArray = JvmType.Names.get(typeArray.getType().value);
+                String nameTypeValue = JvmType.Names.get(valueType.getType().value);
+    
+                System.err.println("ERROR: type " + nameTypeArray + " is not compatible with type " + nameTypeValue);
+                System.exit(1);
+            }
+        });
+
+        // If size is value type, set maxSize of array
+        if (ctx.size instanceof ExprValueContext) {
+            ExprValueContext exprValue = (ExprValueContext)ctx.size;
+            typeArray.setMaxSize(Integer.parseInt(exprValue.value().getText()));
+        }
+
+        // If maxSize is defined, check if values size is compatible with maxSize
+        if (ctx.values.size() > 0 && typeArray.getMaxSize() < ctx.values.size()) {
+            System.err.println("ERROR: array index " + typeArray.getMaxSize() + " out of bounds");
+            System.exit(1);
+        }
         
-    //     if (maxSize != -1 && sizeValues > maxSize) {
-    //         System.err.println("ERROR: array index " + maxSize + " out of bounds");
-    //         System.exit(1);
-    //     }
+        typeArray.setIsArray(true);
+        return typeArray;
+    }
 
-    //     visit(ctx.type());
-    //     VariableType arrayType = new VariableType(lastType.getType(), true, maxSize);
+    @Override
+    public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+        var functionName = ctx.parent.getText();
+        if (!lastScope.FunctionIsDeclared(functionName)) {
+            System.err.println("ERROR: function is not declared");
+        }
 
-    //     List<String> errors = new ArrayList<String>();
-    //     values.forEach(value -> {
-    //         visit(value);
-    //         if (type.getType() != arrayType.getType()) {
-    //             errors.add(
-    //                 "ERROR: cannot use " + value.getText() + " (type "
-    //                 + Types.Names.get(type.getType())
-    //                 + ")" + " as type "
-    //                 + Types.Names.get(arrayType.getType())
-    //                 + " in array or slice literal");
-    //         }
-    //     });
-    //     if (errors.size() > 0) {
-    //         errors.forEach(err -> System.err.println(err));
-    //         System.exit(1);
-    //     }
+        FunctionDeclaration function = lastScope.GetFunction(functionName);
+        if (function.getParamsType().size() != ctx.expr().size()) {
+            System.err.println("ERROR: number of params is incompatible");
+            System.exit(1);
+        }
 
-    //     VariableType type = arrayType;
-        
-    //     return null;
-    // }
+        IntStream.range(0, ctx.expr().size()-1).forEach(index -> {
+            VariableType typeValue = visit(ctx.expr(index));
+            System.out.println(typeValue.getIsArray());
+            System.out.println(typeValue.getMaxSize());
 
-    // @Override
-    // public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
-    //     List<Token> vars = ctx.ID()
-    //         .stream()
-    //         .map(x -> x.getSymbol())
-    //         .collect(Collectors.toList());
-        
-    //     if (ctx.parent != null)
-    //         vars.remove(0);
+            VariableType typeParam = function.getParamsType().get(index);
+            System.out.println(typeParam.getIsArray());
+            System.out.println(typeParam.getMaxSize());
 
-    //     List<String> errors = new ArrayList<String>();
-    //     vars.forEach(var -> {
-    //         boolean isDeclared = lastScope.IsDeclared(var);
-    //         if (!isDeclared)
-    //             errors.add("ERROR: undefined " + var.getText() + " in line " + var.getLine());
-    //     });
-        
-    //     if (errors.size() > 0) {
-    //         errors.forEach(err -> System.err.println(err));
-    //         System.exit(1);
-    //     }
+            if (typeParam.compareTo(typeValue) != 0) {
+                String nameTypeParam = JvmType.Names.get(typeParam.getType().value);
+                String nameTypeValue = JvmType.Names.get(typeValue.getType().value);
+    
+                System.err.println("ERROR: type " + nameTypeParam + " is not compatible with type " + nameTypeValue);
+                System.exit(1);
+            }
+        });
 
-    //     return null;
-    // }
+        return function.getReturnType();
+    }
 
     @Override
     public VariableType visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
@@ -401,13 +415,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             .collect(Collectors.toList());
         
         Token lastVar = vars.remove(vars.size() - 1);
-        boolean isDeclared = lastScope.IsDeclared(lastVar.getText());
+        boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
         if (!isDeclared) {
             System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
             System.exit(1);
         }
         Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
-
+        System.err.println(lastVarDeclaration.getType());
         vars.forEach(var -> {
             JvmType type = lastVarDeclaration.getType().getType();
             lastScope.AddVar(new Variable(var.getText(), var.getLine(), new VariableType(type, false, -1), false));

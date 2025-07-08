@@ -7,7 +7,7 @@ public class VariableType implements Comparable<VariableType> {
     public boolean IsArray;
     public int MaxSize;
 
-    VariableType(JvmType type, boolean isArray, int maxSize) {
+    public VariableType(JvmType type, boolean isArray, int maxSize) {
         Type = type;
         IsArray = isArray;
         MaxSize = maxSize;

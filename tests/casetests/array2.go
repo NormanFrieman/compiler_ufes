@@ -6,7 +6,7 @@ func main() {
     // Cria slice vazio e adiciona elementos
     s := []string{}
     s = append(s, "go")
-    s = append(s, "python", "java")
+    s = append(s, "python")
 
     // Imprime len e cap
     fmt.Printf("Slice: %v (len=%d cap=%d)\n", s, len(s), cap(s))

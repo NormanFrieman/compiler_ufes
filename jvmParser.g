@@ -99,7 +99,7 @@ value:
 
     // value composite
     /// value array
-    | BRACKET_LEFT size=expr? BRACKET_RIGHT type BRACE_LEFT (expr (COMMA expr)*)? BRACE_RIGHT # valueArrayInit
+    | BRACKET_LEFT size=expr? BRACKET_RIGHT type BRACE_LEFT (values+=expr (COMMA values+=expr)*)? BRACE_RIGHT # valueArrayInit
     | ID BRACKET_LEFT expr BRACKET_RIGHT # valueArrayGet
 
     /// value conversion
