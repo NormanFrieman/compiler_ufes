@@ -132,10 +132,6 @@ compare:
 ;
 
 // VARIABLES AND ATTRIBUTES
-attr:
-    ID type? (COMMA ID type?)*
-;
-
 var_assign:
     (CONST | VAR)? ID type? # varWithoutValue
     | (CONST | VAR)? varInit=ID type? math_operations? (ASSIGN_VAR | ASSIGN) expr #varWithValue
@@ -144,7 +140,7 @@ var_assign:
 
 // FUNCTIONS
 function_declaration:
-    FUNCTION ID PAREN_LEFT attr? PAREN_RIGHT type?
+    FUNCTION functionName=ID PAREN_LEFT (ids+=ID types+=type (COMMA ids+=ID types+=type)*)? PAREN_RIGHT functionType=type?
 ;
 
 function_call:

@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.antlr.v4.runtime.Token;
 import generated.jvmParser;
 import generated.jvmParser.ExprValueContext;
+import generated.jvmParser.TypeContext;
 import generated.jvmParserBaseVisitor;
 import checker.utils.JvmType;
 import checker.utils.Scope;
@@ -18,8 +18,70 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     private LinkedList<Scope> scopes = new LinkedList<Scope>();
     private Scope lastScope;
 
+    // Functions
+    private HashMap<String, FunctionDeclaration> functionsMap = new HashMap<String, FunctionDeclaration>();
+
     // Import list
     private HashMap<String, String> imports = new HashMap<String, String>();
+
+    public SemanticChecker() {
+        //#region Declaring functions
+        FunctionDeclaration append = new FunctionDeclaration(
+            "append",
+            0,
+            null,
+            new VariableType(JvmType.STRING, true, -1),
+            params -> true
+        );
+
+        FunctionDeclaration println = new FunctionDeclaration(
+            "Println",
+            0,
+            null,
+            null,
+            params -> true
+        );
+
+        FunctionDeclaration printf = new FunctionDeclaration(
+            "Printf",
+            0,
+            null,
+            null,
+            params -> true
+        );
+
+        FunctionDeclaration len = new FunctionDeclaration(
+            "len",
+            0,
+            null,
+            new VariableType(JvmType.INT, false, 0),
+            params -> true
+        );
+
+        FunctionDeclaration cap = new FunctionDeclaration(
+            "cap",
+            0,
+            null,
+            new VariableType(JvmType.INT, false, 0),
+            params -> true
+        );
+
+        FunctionDeclaration toUpper = new FunctionDeclaration(
+            "ToUpper",
+            0,
+            null,
+            null,
+            params -> true
+        );
+        //#endregion
+
+        functionsMap.put(append.getName(), append);
+        functionsMap.put(println.getName(), println);
+        functionsMap.put(printf.getName(), printf);
+        functionsMap.put(len.getName(), len);
+        functionsMap.put(cap.getName(), cap);
+        functionsMap.put(toUpper.getName(), toUpper);
+    }
 
     //#region Visit types
     @Override
@@ -98,6 +160,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     @Override
     public VariableType visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
+
         boolean isDeclared = this.lastScope.VarIsDeclared(id.getText());
         if (!isDeclared) {
             System.err.println("ERROR: undefined " + id.getText() + " in line " + id.getLine());
@@ -130,6 +193,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
         boolean isCompatible = type0.compareTo(type1) == 0;
         if (!isCompatible) {
+
             String nameType0 = JvmType.Names.get(type0.getType().value);
             String nameType1 = JvmType.Names.get(type1.getType().value);
 
@@ -155,8 +219,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             System.exit(1);
         }
 
-        // TODO - VERIFICAR QUAL TIPO SERÁ RETORNADO
-        return type0;
+        return new VariableType(JvmType.BOOL, false, -1);
     }
 
     @Override
@@ -221,17 +284,38 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             System.exit(1);
         }
 
-        VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
-        VariableType typeValue = visit(ctx.expr());
+        if (
+            ctx.ASSIGN() != null
+            || (ctx.VAR() != null && ctx.ASSIGN_VAR() != null)
+            || (ctx.CONST() != null && ctx.ASSIGN_VAR() != null)
+        ) {
+            VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
+            VariableType typeValue = visit(ctx.expr());
+    
+            if (typeAssign != null && typeAssign.compareTo(typeValue) != 0) {
+                System.err.println("ERROR: cannot use " + typeValue.print() + " as type " + typeAssign.print() + " in assignment");
+                System.exit(1);
+            }
+            
+            VariableType typeVar = typeAssign != null ? typeAssign : typeValue;
+            Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeVar, ctx.CONST() != null);
+            lastScope.AddVar(var);
+        } else if (ctx.ASSIGN_VAR() != null) {
+            boolean isDeclared = lastScope.VarIsDeclared(varInicialize.getText());
+            if (!isDeclared) {
+                System.err.println("ERROR: variable " + varInicialize.getText() + " is not declared");
+                System.exit(1);
+            }
 
-        if (typeAssign != null && typeAssign.compareTo(typeValue) != 0) {
-            System.err.println("ERROR: cannot use " + typeAssign.print() + " as type " + typeValue.print() + " in assignment");
-            System.exit(1);
+            Variable var = lastScope.GetVar(varInicialize.getText());
+            VariableType varType = var.getType();
+            
+            VariableType assignType = visit(ctx.expr());
+            if (varType.compareTo(assignType) != 0) {
+                System.err.println("ERROR: assignment incorrect");
+                System.exit(1);
+            }
         }
-        
-        VariableType typeVar = typeAssign != null ? typeAssign : typeValue;
-        Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeVar, ctx.CONST() != null);
-        lastScope.AddVar(var);
 
         return null;
     }
@@ -337,7 +421,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         }
 
         // If maxSize is defined, check if values size is compatible with maxSize
-        if (ctx.values.size() > 0 && typeArray.getMaxSize() < ctx.values.size()) {
+        if (typeArray.getMaxSize() != -1 && ctx.values.size() > 0 && typeArray.getMaxSize() < ctx.values.size()) {
             System.err.println("ERROR: array index " + typeArray.getMaxSize() + " out of bounds");
             System.exit(1);
         }
@@ -349,33 +433,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     @Override
     public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
         var functionName = ctx.parent.getText();
-        if (!lastScope.FunctionIsDeclared(functionName)) {
-            System.err.println("ERROR: function is not declared");
-        }
-
-        FunctionDeclaration function = lastScope.GetFunction(functionName);
-        if (function.getParamsType().size() != ctx.expr().size()) {
-            System.err.println("ERROR: number of params is incompatible");
+        if (!this.FunctionIsDeclared(functionName)) {
+            System.err.println("ERROR: function " + functionName + " is not declared");
             System.exit(1);
         }
 
-        IntStream.range(0, ctx.expr().size()-1).forEach(index -> {
-            VariableType typeValue = visit(ctx.expr(index));
-            System.out.println(typeValue.getIsArray());
-            System.out.println(typeValue.getMaxSize());
+        FunctionDeclaration function = this.GetFunction(functionName);
 
-            VariableType typeParam = function.getParamsType().get(index);
-            System.out.println(typeParam.getIsArray());
-            System.out.println(typeParam.getMaxSize());
-
-            if (typeParam.compareTo(typeValue) != 0) {
-                String nameTypeParam = JvmType.Names.get(typeParam.getType().value);
-                String nameTypeValue = JvmType.Names.get(typeValue.getType().value);
-    
-                System.err.println("ERROR: type " + nameTypeParam + " is not compatible with type " + nameTypeValue);
-                System.exit(1);
-            }
+        LinkedList<VariableType> params = new LinkedList<VariableType>();
+        ctx.expr().forEach(e -> {
+            VariableType type = visit(e);
+            params.add(type);
         });
+        function.CheckParams(params);
 
         return function.getReturnType();
     }
@@ -392,6 +462,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
         visit(ctx.function_call());
 
+        return null;
+    }
+
+    @Override
+    public VariableType visitValueConversion(jvmParser.ValueConversionContext ctx) {
+        visit(ctx.expr());
+        return visit(ctx.type());
+        // VERIFY TYPE CONVERSIONS
+    }
+
+    @Override
+    public VariableType visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
+        // VERIFY type INT
         return null;
     }
     //#endregion
@@ -414,18 +497,23 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             .map(x -> x.getSymbol())
             .collect(Collectors.toList());
         
-        Token lastVar = vars.remove(vars.size() - 1);
+        Token indexVar = vars.get(0);
+        Token iterVar = vars.get(1);        
+        Token lastVar = vars.get(2);
+        
         boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
         if (!isDeclared) {
             System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
             System.exit(1);
         }
+
         Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
-        System.err.println(lastVarDeclaration.getType());
-        vars.forEach(var -> {
-            JvmType type = lastVarDeclaration.getType().getType();
-            lastScope.AddVar(new Variable(var.getText(), var.getLine(), new VariableType(type, false, -1), false));
-        });
+        JvmType type = lastVarDeclaration.getType().getType();
+
+        // Index of For Range
+        lastScope.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT, false, -1), false));
+        // Iter of For Range
+        lastScope.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type, false, -1), false));
 
         return null;
     }
@@ -439,8 +527,66 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         scopes.add(scope);
         lastScope = scope;
 
+        visit(ctx.function_declaration());
         return visit(ctx.scope());
     }
+
+    @Override
+    public VariableType visitFunction_declaration(jvmParser.Function_declarationContext ctx) {
+        String functionName = ctx.functionName.getText();
+        VariableType functionType = null;
+        if (ctx.functionType != null)
+            functionType = visit(ctx.functionType);
+        
+        List<Token> ids = ctx.ids;
+        List<TypeContext> types = ctx.types;
+
+        LinkedList<VariableType> paramsType = new LinkedList<VariableType>();
+        
+        for (int i = 0; i < ids.size(); i++) {
+            String varName = ids.get(i).getText();
+            VariableType type = visit(types.get(i));
+
+            lastScope.AddVar(new Variable(varName, ids.get(i).getLine(), type, false));
+            paramsType.add(type);
+        }
+
+
+        FunctionDeclaration function = new FunctionDeclaration(
+            functionName,
+            ctx.functionName.getLine(),
+            paramsType,
+            functionType,
+            null);
+
+        this.AddFunction(function);
+
+        return null;
+    }
+
+    // @Override
+    // public VariableType visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
+    //     if (ctx.expr() == null)
+    //         return null;
+        
+    //     VariableType returnType = ctx.expr();
+
+    //     if (lastScope.)
+    // }
     //#endregion
+
+
+
+    public void AddFunction(FunctionDeclaration function) {
+        functionsMap.put(function.getName(), function);
+    }
+
+    public FunctionDeclaration GetFunction(String name) {
+        return functionsMap.get(name);
+    }
+    
+    public boolean FunctionIsDeclared(String functionName) {
+        return this.GetFunction(functionName) != null;
+    }
 
 }

@@ -1,7 +1,6 @@
 package checker.utils;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import checker.FunctionDeclaration;
 import checker.Variable;
@@ -12,31 +11,62 @@ public class Scope {
     private HashMap<String, FunctionDeclaration> functionsMap = new HashMap<String, FunctionDeclaration>();
 
     public Scope() {
-        //#region Declaring append functino
-        VariableType paramType = new VariableType(JvmType.STRING, false, -1);
-        LinkedList<VariableType> paramsType = new LinkedList<VariableType>();
-        paramsType.add(paramType);
-        paramsType.add(paramType);
-        FunctionDeclaration append = new FunctionDeclaration("append", 0, paramsType, paramType);
-        //#endregion
+        // //#region Declaring functions
+        // FunctionDeclaration append = new FunctionDeclaration(
+        //     "append",
+        //     0,
+        //     null,
+        //     new VariableType(JvmType.STRING, true, -1),
+        //     params -> true
+        // );
 
-        functionsMap.put(append.getName(), append);
+        // FunctionDeclaration println = new FunctionDeclaration(
+        //     "Println",
+        //     0,
+        //     null,
+        //     null,
+        //     params -> true
+        // );
+
+        // FunctionDeclaration printf = new FunctionDeclaration(
+        //     "Printf",
+        //     0,
+        //     null,
+        //     null,
+        //     params -> true
+        // );
+
+        // FunctionDeclaration len = new FunctionDeclaration(
+        //     "len",
+        //     0,
+        //     null,
+        //     new VariableType(JvmType.INT, false, 0),
+        //     params -> true
+        // );
+
+        // FunctionDeclaration cap = new FunctionDeclaration(
+        //     "cap",
+        //     0,
+        //     null,
+        //     new VariableType(JvmType.INT, false, 0),
+        //     params -> true
+        // );
+        // //#endregion
+
+        // functionsMap.put(append.getName(), append);
+        // functionsMap.put(println.getName(), println);
+        // functionsMap.put(printf.getName(), printf);
+        // functionsMap.put(len.getName(), len);
+        // functionsMap.put(cap.getName(), cap);
     }
 
     public boolean VarIsDeclared(String varName) {
-        Variable variable = this.GetVar(varName);
-
-        // boolean isDeclared = variable != null;
-        // if (!isDeclared)
-        //     return false;
-        // return true;
-        return variable != null;
+        return this.GetVar(varName) != null;
     }
 
-    public boolean FunctionIsDeclared(String functionName) {
-        FunctionDeclaration function = this.GetFunction(functionName);
-        return function != null;
-    }
+    // public boolean FunctionIsDeclared(String functionName) {
+    //     return this.GetFunction(functionName) != null;
+    // }
 
     public void AddVar(Variable var) {
         variableMap.put(var.Name, var);
@@ -46,11 +76,11 @@ public class Scope {
         return variableMap.get(name);
     }
 
-    public void AddFunction(FunctionDeclaration function) {
-        functionsMap.put(function.getName(), function);
-    }
+    // public void AddFunction(FunctionDeclaration function) {
+    //     functionsMap.put(function.getName(), function);
+    // }
 
-    public FunctionDeclaration GetFunction(String name) {
-        return functionsMap.get(name);
-    }
+    // public FunctionDeclaration GetFunction(String name) {
+    //     return functionsMap.get(name);
+    // }
 }

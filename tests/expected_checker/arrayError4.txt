@@ -1,2 +1,1 @@
-ERROR: cannot use 1 (type int) as type string in array or slice literal
-ERROR: cannot use 2.3 (type float64) as type string in array or slice literal
+ERROR: type string is not compatible with type int
