@@ -1,10 +1,8 @@
-package checker;
+package checker.utils;
 
 import java.util.LinkedList;
 import java.util.function.Function;
 import java.util.stream.IntStream;
-
-import checker.utils.JvmType;
 
 public class FunctionDeclaration {
     public String Name;

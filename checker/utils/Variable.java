@@ -1,4 +1,4 @@
-package checker;
+package checker.utils;
 
 public class Variable {
     public String Name;
@@ -6,7 +6,14 @@ public class Variable {
     public VariableType Type;
     public boolean IsConst;
 
-    Variable(String name, int line, VariableType type, boolean isConst) {
+    public Variable(String name, int line, VariableType type) {
+        Name = name;
+        Line = line;
+        Type = type;
+        IsConst = false;
+    }
+
+    public Variable(String name, int line, VariableType type, boolean isConst) {
         Name = name;
         Line = line;
         Type = type;

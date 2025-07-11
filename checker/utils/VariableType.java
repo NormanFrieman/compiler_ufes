@@ -1,11 +1,21 @@
-package checker;
-
-import checker.utils.JvmType;
+package checker.utils;
 
 public class VariableType implements Comparable<VariableType> {
     public final JvmType Type;
     public boolean IsArray;
     public int MaxSize;
+
+    public VariableType(JvmType type) {
+        Type = type;
+        IsArray = false;
+        MaxSize = ArraySize.NO_ARRAY.value;
+    }
+
+    public VariableType(JvmType type, boolean isArray) {
+        Type = type;
+        IsArray = isArray;
+        MaxSize = ArraySize.NO_ARRAY.value;
+    }
 
     public VariableType(JvmType type, boolean isArray, int maxSize) {
         Type = type;
