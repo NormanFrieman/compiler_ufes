@@ -140,6 +140,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         VariableType type0 = visit(ctx.expr(0));
         VariableType type1 = visit(ctx.expr(1));
 
+        // TO DO
         return this.TypeCompatible(type0, type1);
     }
 
@@ -148,6 +149,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         VariableType type0 = visit(ctx.expr(0));
         VariableType type1 = visit(ctx.expr(1));
 
+        // TO DO
         this.TypeCompatible(type0, type1);
         return new VariableType(JvmType.BOOL);
     }
@@ -159,8 +161,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         if (var.getType() != JvmType.BOOL) {
             String nameType = JvmType.Names.get(var.getType().value);
 
-            System.err.println("ERROR: type " + nameType + "is not boolean");
-            System.exit(0);
+            ExitWithError("ERROR: type " + nameType + "is not boolean");
         }
 
         return var;
@@ -295,9 +296,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         VariableType expectedSizeType = new VariableType(JvmType.INT);
 
         // Check if size value is int
-        if (sizeType != null && expectedSizeType.compareTo(sizeType) != 0){ 
-            System.err.println("ERROR: size of array must be int value");
-            System.exit(1);
+        if (sizeType != null && expectedSizeType.compareTo(sizeType) != 0){
+            ExitWithError("ERROR: size of array must be int value");
         }
 
         // Check if values of array are compatible with type
@@ -314,10 +314,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         }
 
         // If maxSize is defined, check if values size is compatible with maxSize
-        if (typeArray.getMaxSize() != -1 && ctx.values.size() > 0 && typeArray.getMaxSize() < ctx.values.size()) {
-            System.err.println("ERROR: array index " + typeArray.getMaxSize() + " out of bounds");
-            System.exit(1);
-        }
+        if (typeArray.getMaxSize() != -1 && ctx.values.size() > 0 && typeArray.getMaxSize() < ctx.values.size())
+            ExitWithError("ERROR: array index " + typeArray.getMaxSize() + " out of bounds");
         
         typeArray.setIsArray(true);
         return typeArray;
@@ -360,10 +358,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     public VariableType visitVarWithValue(jvmParser.VarWithValueContext ctx) {
         Token varInicialize = ctx.varInit;
 
-        if (ctx.CONST() != null && ctx.ASSIGN() != null) {
-            System.err.println("ERROR: unexpected :=, expecting =");
-            System.exit(1);
-        }
+        if (ctx.CONST() != null && ctx.ASSIGN() != null)
+            ExitWithError("ERROR: unexpected :=, expecting =");
 
         boolean isVarInit = ctx.ASSIGN() != null
             || (ctx.VAR() != null && ctx.ASSIGN_VAR() != null)
@@ -427,7 +423,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
         this.AddFunction(function);
 
-        return null;
+        return functionType;
     }
 
     @Override
@@ -457,20 +453,31 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         scopes.add(scope);
         lastScope = scope;
 
-        visit(ctx.function_declaration());
-        return visit(ctx.scope());
+        VariableType functionType = visit(ctx.function_declaration());
+        VariableType scopeType = visit(ctx.scope());
+
+        Boolean functionTypeIsNull = functionType == null;
+        Boolean scopeTypeIsNull = scopeType == null;
+
+        if (functionTypeIsNull && scopeTypeIsNull)
+            return null;
+
+        if (functionTypeIsNull)
+            ExitWithError("Too many return values");
+
+        if (scopeTypeIsNull)
+            ExitWithError("Missing return");
+
+        TypeCompare(functionType, scopeType);
+        return null;
     }
     
     @Override
     public VariableType visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
-        // TO DO
-        // if (ctx.expr() == null)
-        //     return null;
+        if (ctx.expr() == null)
+            return null;
         
-        // VariableType returnType = ctx.expr();
-
-        // if (lastScope.)
-        return null;
+        return visit(ctx.expr());
     }
     //#endregion
 
@@ -509,10 +516,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         Token lastVar = vars.get(2);
         
         boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
-        if (!isDeclared) {
-            System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
-            System.exit(1);
-        }
+        if (!isDeclared)
+            ExitWithError("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
 
         Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
         JvmType type = lastVarDeclaration.getType().getType();
@@ -544,19 +549,15 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         String varName = token.getText();
 
         Variable var = this.lastScope.GetVar(varName);
-        if (var == null) {
-            System.err.println("ERROR: undefined " + varName + " in line " + token.getLine());
-            System.exit(1);
-        }
+        if (var == null)
+            ExitWithError("ERROR: undefined " + varName + " in line " + token.getLine());
 
         return var;
     }
 
     void TypeCompare(VariableType type0, VariableType type1) {
-        if (type1.compareTo(type0) != 0) {
-            System.err.println("ERROR: cannot use " + type1.print() + " as type " + type0.print() + " in assignment");
-            System.exit(1);
-        }
+        if (type1.compareTo(type0) != 0)
+            ExitWithError("ERROR: cannot use " + type1.print() + " as type " + type0.print() + " in assignment");
     }
 
     VariableType TypeCompatible(VariableType type0, VariableType type1) {
@@ -566,8 +567,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             String nameType0 = JvmType.Names.get(type0.getType().value);
             String nameType1 = JvmType.Names.get(type1.getType().value);
 
-            System.err.println("ERROR: type " + nameType0 + " is not compatible with type " + nameType1);
-            System.exit(1);
+            ExitWithError("ERROR: type " + nameType0 + " is not compatible with type " + nameType1);
         }
 
         return type0;
@@ -578,10 +578,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         String functionName = token.getText();
 
         FunctionDeclaration function = this.GetFunction(functionName);
-        if (function == null) {
-            System.err.println("ERROR: undefined " + function + " in line " + token.getLine());
-            System.exit(1);
-        }
+        if (function == null)
+            ExitWithError("ERROR: undefined " + function + " in line " + token.getLine());
 
         return function;
     }
@@ -603,11 +601,16 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         String parentName = token.getText();
 
         boolean isDeclared = imports.get(parentName) != null;
-        if (!isDeclared) {
-            System.err.println("ERROR: undefined " + parentName + " in line " + token.getLine());
-            System.exit(1);
-        }
+        if (!isDeclared)
+            ExitWithError("ERROR: undefined " + parentName + " in line " + token.getLine());
     }
     //#endregion
+    //#region Error
+    void ExitWithError(String err) {
+        System.err.println(err);
+        System.exit(1);
+    }
+    //#endregion
+    
     //#endregion
 }
