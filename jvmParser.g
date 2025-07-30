@@ -183,7 +183,7 @@ for_stmt:
     (FOR | for_declaration) BRACE_LEFT scope BRACE_RIGHT
 ;
 
-// CONDICIONAL
+// CONDITIONAL
 if_init:
     expr
     | PAREN_LEFT expr PAREN_RIGHT

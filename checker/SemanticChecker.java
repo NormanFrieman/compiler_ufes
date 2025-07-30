@@ -87,6 +87,86 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         functionsMap.put(toUpper.getName(), toUpper);
     }
 
+    //#region Imports
+    @Override
+    public VariableType visitSimpleImport(jvmParser.SimpleImportContext ctx) {
+        Token token = ctx.STRING_VALUE().getSymbol();
+
+        String importName = token.getText().replaceAll("\"", "");
+        imports.put(importName, importName);
+
+        return null;
+    }
+
+    @Override
+    public VariableType visitMultiImport(jvmParser.MultiImportContext ctx) {
+        List<String> importNames = ctx.STRING_VALUE()
+            .stream()
+            .map(x -> x.getText().replaceAll("\"", ""))
+            .collect(Collectors.toList());
+
+        importNames.forEach(importName -> imports.put(importName, importName));
+
+        return null;
+    }
+    //#endregion    
+
+    //#region Expression
+    @Override
+    public VariableType visitExprId(jvmParser.ExprIdContext ctx) {
+        Token id = ctx.ID().getSymbol();
+
+        Variable var = this.CheckVar(id);
+        return var.getType();
+    }
+    
+    @Override
+    public VariableType visitExprValue(jvmParser.ExprValueContext ctx) {
+        return visit(ctx.value());
+    }
+
+    @Override
+    public VariableType visitExprFunctionCall(jvmParser.ExprFunctionCallContext ctx) {
+        return visit(ctx.function_call());
+    }
+
+    @Override
+    public VariableType visitExprNull(jvmParser.ExprNullContext ctx) {
+        return null;
+    }
+
+    @Override
+    public VariableType visitExprMath(jvmParser.ExprMathContext ctx) {
+        VariableType type0 = visit(ctx.expr(0));
+        VariableType type1 = visit(ctx.expr(1));
+
+        return this.TypeCompatible(type0, type1);
+    }
+
+    @Override
+    public VariableType visitExprBool(jvmParser.ExprBoolContext ctx) {
+        VariableType type0 = visit(ctx.expr(0));
+        VariableType type1 = visit(ctx.expr(1));
+
+        this.TypeCompatible(type0, type1);
+        return new VariableType(JvmType.BOOL);
+    }
+
+    @Override
+    public VariableType visitExprNotBool(jvmParser.ExprNotBoolContext ctx) {
+        VariableType var = visit(ctx.expr());
+
+        if (var.getType() != JvmType.BOOL) {
+            String nameType = JvmType.Names.get(var.getType().value);
+
+            System.err.println("ERROR: type " + nameType + "is not boolean");
+            System.exit(0);
+        }
+
+        return var;
+    }
+    //#endregion
+
     //#region Visit types
     @Override
     public VariableType visitUintType(jvmParser.UintTypeContext ctx) {
@@ -150,134 +230,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     }
     //#endregion
 
-    //#region Expression
-    @Override
-    public VariableType visitExprId(jvmParser.ExprIdContext ctx) {
-        Token id = ctx.ID().getSymbol();
-
-        Variable var = this.CheckVar(id);
-        return var.getType();
-    }
-    
-    @Override
-    public VariableType visitExprValue(jvmParser.ExprValueContext ctx) {
-        return visit(ctx.value());
-    }
-
-    @Override
-    public VariableType visitExprFunctionCall(jvmParser.ExprFunctionCallContext ctx) {
-        return visit(ctx.function_call());
-    }
-
-    @Override
-    public VariableType visitExprNull(jvmParser.ExprNullContext ctx) {
-        return null;
-    }
-
-    @Override
-    public VariableType visitExprMath(jvmParser.ExprMathContext ctx) {
-        VariableType type0 = visit(ctx.expr(0));
-        VariableType type1 = visit(ctx.expr(1));
-
-        return this.TypeCompatible(type0, type1);
-    }
-
-    @Override
-    public VariableType visitExprBool(jvmParser.ExprBoolContext ctx) {
-        VariableType type0 = visit(ctx.expr(0));
-        VariableType type1 = visit(ctx.expr(1));
-
-        this.TypeCompatible(type0, type1);
-        return new VariableType(JvmType.BOOL);
-    }
-
-    @Override
-    public VariableType visitExprNotBool(jvmParser.ExprNotBoolContext ctx) {
-        VariableType var = visit(ctx.expr());
-
-        if (var.getType() != JvmType.BOOL) {
-            String nameType = JvmType.Names.get(var.getType().value);
-
-            System.err.println("ERROR: type " + nameType + "is not boolean");
-            System.exit(0);
-        }
-
-        return var;
-    }
-    //#endregion
-
-    //region Imports
-    @Override
-    public VariableType visitSimpleImport(jvmParser.SimpleImportContext ctx) {
-        Token token = ctx.STRING_VALUE().getSymbol();
-
-        String importName = token.getText().replaceAll("\"", "");
-        imports.put(importName, importName);
-
-        return null;
-    }
-
-    @Override
-    public VariableType visitMultiImport(jvmParser.MultiImportContext ctx) {
-        List<String> importNames = ctx.STRING_VALUE()
-            .stream()
-            .map(x -> x.getText().replaceAll("\"", ""))
-            .collect(Collectors.toList());
-        
-        importNames.forEach(importName -> imports.put(importName, importName));
-
-        return null;
-    }
-    //#endregion
-
-    //#region Var assign
-    @Override
-    public VariableType visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
-        Token var = ctx.ID().getSymbol();
-
-        VariableType type = visit(ctx.type());
-
-        lastScope.AddVar(
-            new Variable(var.getText(), var.getLine(), type, ctx.CONST() != null)
-        );
-
-        return null;
-    }
-
-    @Override
-    public VariableType visitVarWithValue(jvmParser.VarWithValueContext ctx) {
-        Token varInicialize = ctx.varInit;
-
-        if (ctx.CONST() != null && ctx.ASSIGN() != null) {
-            System.err.println("ERROR: unexpected :=, expecting =");
-            System.exit(1);
-        }
-
-        boolean isVarInit = ctx.ASSIGN() != null
-            || (ctx.VAR() != null && ctx.ASSIGN_VAR() != null)
-            || (ctx.CONST() != null && ctx.ASSIGN_VAR() != null);
-        boolean isVarUpdate = ctx.ASSIGN_VAR() != null;
-
-        if (isVarInit) {
-            VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
-            VariableType typeValue = visit(ctx.expr());
-    
-            if (typeAssign != null)
-                this.TypeCompare(typeAssign, typeValue);
-            
-            Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeValue, ctx.CONST() != null);
-            lastScope.AddVar(var);
-        } else if (isVarUpdate) {
-            Variable var = this.CheckVar(varInicialize);            
-            VariableType assignType = visit(ctx.expr());
-
-            this.TypeCompare(var.getType(), assignType);
-        }
-
-        return null;
-    }
-    //#endregion
-
+    //#region Value
     //#region Visit primitive values
     @Override
     public VariableType visitValueIntD(jvmParser.ValueIntDContext ctx) {
@@ -371,23 +324,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     }
 
     @Override
-    public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
-        FunctionDeclaration function = this.CheckFunction(ctx.parent);
-
-        LinkedList<VariableType> params = new LinkedList<VariableType>();
-        ctx.expr().forEach(e -> {
-            VariableType type = visit(e);
-            params.add(type);
-        });
-        function.CheckParams(params);
-
-        return function.getReturnType();
-    }
-
-    @Override
-    public VariableType visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
-        this.CheckImports(ctx.parent);
-        return visit(ctx.function_call());
+    public VariableType visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
+        return null;
     }
 
     @Override
@@ -398,64 +336,67 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     }
 
     @Override
-    public VariableType visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
-        // VERIFY type INT
+    public VariableType visitValueProp(jvmParser.ValuePropContext ctx) {
         return null;
     }
     //#endregion
+    //#endregion
 
-    //#region For
+    //#region Var assign
     @Override
-    public VariableType visitFor_init(jvmParser.For_initContext ctx) {
+    public VariableType visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
         Token var = ctx.ID().getSymbol();
-        VariableType type = visit(ctx.value());
 
-        lastScope.AddVar(new Variable(var.getText(), var.getLine(), type));
+        VariableType type = visit(ctx.type());
+
+        lastScope.AddVar(
+            new Variable(var.getText(), var.getLine(), type, ctx.CONST() != null)
+        );
 
         return null;
     }
 
     @Override
-    public VariableType visitFor_range(jvmParser.For_rangeContext ctx) {
-        List<Token> vars = ctx.ID()
-            .stream()
-            .map(x -> x.getSymbol())
-            .collect(Collectors.toList());
-        
-        Token indexVar = vars.get(0);
-        Token iterVar = vars.get(1);        
-        Token lastVar = vars.get(2);
-        
-        boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
-        if (!isDeclared) {
-            System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
+    public VariableType visitVarWithValue(jvmParser.VarWithValueContext ctx) {
+        Token varInicialize = ctx.varInit;
+
+        if (ctx.CONST() != null && ctx.ASSIGN() != null) {
+            System.err.println("ERROR: unexpected :=, expecting =");
             System.exit(1);
         }
 
-        Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
-        JvmType type = lastVarDeclaration.getType().getType();
+        boolean isVarInit = ctx.ASSIGN() != null
+            || (ctx.VAR() != null && ctx.ASSIGN_VAR() != null)
+            || (ctx.CONST() != null && ctx.ASSIGN_VAR() != null);
+        boolean isVarUpdate = ctx.ASSIGN_VAR() != null;
 
-        // Index of For Range
-        lastScope.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
-        // Iter of For Range
-        lastScope.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
+        if (isVarInit) {
+            VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
+            VariableType typeValue = visit(ctx.expr());
+    
+            if (typeAssign != null)
+                this.TypeCompare(typeAssign, typeValue);
+            
+            Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeValue, ctx.CONST() != null);
+            lastScope.AddVar(var);
+        } else if (isVarUpdate) {
+            Variable var = this.CheckVar(varInicialize);            
+            VariableType assignType = visit(ctx.expr());
 
+            this.TypeCompare(var.getType(), assignType);
+        }
+
+        return null;
+    }
+
+    @Override
+    public VariableType visitVarWithIncrease(jvmParser.VarWithIncreaseContext ctx) {
+        // TO DO
         return null;
     }
     //#endregion
 
-    //#region Scopes
-    @Override
-    public VariableType visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
-        Scope scope = new Scope();
-
-        scopes.add(scope);
-        lastScope = scope;
-
-        visit(ctx.function_declaration());
-        return visit(ctx.scope());
-    }
-
+    //#region Functions
     @Override
     public VariableType visitFunction_declaration(jvmParser.Function_declarationContext ctx) {
         String functionName = ctx.functionName.getText();
@@ -489,17 +430,113 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         return null;
     }
 
-    // @Override
-    // public VariableType visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
-    //     if (ctx.expr() == null)
-    //         return null;
-        
-    //     VariableType returnType = ctx.expr();
+    @Override
+    public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+        FunctionDeclaration function = this.CheckFunction(ctx.parent);
 
-    //     if (lastScope.)
-    // }
+        LinkedList<VariableType> params = new LinkedList<VariableType>();
+        ctx.expr().forEach(e -> {
+            VariableType type = visit(e);
+            params.add(type);
+        });
+        function.CheckParams(params);
+
+        return function.getReturnType();
+    }
+
+    @Override
+    public VariableType visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
+        this.CheckImports(ctx.parent);
+        return visit(ctx.function_call());
+    }
+
+    @Override
+    public VariableType visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
+        Scope scope = new Scope();
+
+        scopes.add(scope);
+        lastScope = scope;
+
+        visit(ctx.function_declaration());
+        return visit(ctx.scope());
+    }
+    
+    @Override
+    public VariableType visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
+        // TO DO
+        // if (ctx.expr() == null)
+        //     return null;
+        
+        // VariableType returnType = ctx.expr();
+
+        // if (lastScope.)
+        return null;
+    }
     //#endregion
 
+    //#region Loop
+    @Override
+    public VariableType visitFor_init(jvmParser.For_initContext ctx) {
+        Token var = ctx.ID().getSymbol();
+        VariableType type = visit(ctx.value());
+
+        lastScope.AddVar(new Variable(var.getText(), var.getLine(), type));
+
+        return null;
+    }
+
+    @Override
+    public VariableType visitFor_cond(jvmParser.For_condContext ctx) {
+        // TO DO
+        return null;
+    }
+
+    @Override
+    public VariableType visitFor_end(jvmParser.For_endContext ctx) {
+        // TO DO
+        return null;
+    }
+
+    @Override
+    public VariableType visitFor_range(jvmParser.For_rangeContext ctx) {
+        List<Token> vars = ctx.ID()
+            .stream()
+            .map(x -> x.getSymbol())
+            .collect(Collectors.toList());
+        
+        Token indexVar = vars.get(0);
+        Token iterVar = vars.get(1);        
+        Token lastVar = vars.get(2);
+        
+        boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
+        if (!isDeclared) {
+            System.err.println("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
+            System.exit(1);
+        }
+
+        Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
+        JvmType type = lastVarDeclaration.getType().getType();
+
+        // Index of For Range
+        lastScope.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
+        // Iter of For Range
+        lastScope.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
+
+        return null;
+    }
+    //#endregion
+
+    //#region Conditional
+    
+    // TO DO
+
+    //#endregion
+
+    //#region GOTO
+
+    // TO DO
+
+    //#endregion
 
     //#region Auxiliary methods
     //#region Variable
