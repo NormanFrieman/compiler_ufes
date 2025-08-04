@@ -13,7 +13,9 @@ public enum JvmType {
     FLOAT32(jvmParser.TYPE_FLOAT32),
     FLOAT64(jvmParser.TYPE_FLOAT64),
     STRING(jvmParser.TYPE_STRING),
-    BOOL(jvmParser.TYPE_BOOL);
+    BOOL(jvmParser.TYPE_BOOL),
+    
+    ERROR(-1);
 
     public final int value;
 
@@ -33,4 +35,20 @@ public enum JvmType {
         jvmParser.TYPE_STRING, "string",
         jvmParser.TYPE_BOOL, "bool"
     );
+
+    // LEFT: value to assign
+    // RIGHT: type
+    public static JvmType[][] TypeAssign = {
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.UINT, JvmType.INT, JvmType.INT8, JvmType.INT16, JvmType.INT32, JvmType.INT64, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.FLOAT32, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.FLOAT64, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.STRING, JvmType.ERROR, JvmType.ERROR },
+        { JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.BOOL, JvmType.ERROR },
+        { JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR, JvmType.ERROR },
+    };
 }

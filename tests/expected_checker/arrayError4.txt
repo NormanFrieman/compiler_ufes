@@ -1,1 +1,1 @@
-ERROR: cannot use int as type string in assignment
+ERROR: mismatched types int and string

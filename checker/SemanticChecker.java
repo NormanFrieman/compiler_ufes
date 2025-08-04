@@ -140,8 +140,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         VariableType type0 = visit(ctx.expr(0));
         VariableType type1 = visit(ctx.expr(1));
 
-        // TO DO
-        return this.TypeCompatible(type0, type1);
+        this.TypeCompare(type0, type1);
+        return type0;
     }
 
     @Override
@@ -149,8 +149,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         VariableType type0 = visit(ctx.expr(0));
         VariableType type1 = visit(ctx.expr(1));
 
-        // TO DO
-        this.TypeCompatible(type0, type1);
+        this.TypeCompare(type0, type1);
         return new VariableType(JvmType.BOOL);
     }
 
@@ -260,12 +259,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 	
 	@Override
     public VariableType visitValueFloat(jvmParser.ValueFloatContext ctx) {
-        return new VariableType(JvmType.FLOAT64);
+        return new VariableType(JvmType.FLOAT32);
     }
 	
 	@Override
     public VariableType visitValueFloatN(jvmParser.ValueFloatNContext ctx) {
-        return new VariableType(JvmType.FLOAT64);
+        return new VariableType(JvmType.FLOAT32);
     }
 	
 	@Override
@@ -369,11 +368,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         if (isVarInit) {
             VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
             VariableType typeValue = visit(ctx.expr());
-    
-            if (typeAssign != null)
-                this.TypeCompare(typeAssign, typeValue);
             
-            Variable var = new Variable(varInicialize.getText(), varInicialize.getLine(), typeValue, ctx.CONST() != null);
+            Variable var = new Variable(
+                varInicialize.getText(),
+                varInicialize.getLine(),
+                TypeAssign(typeAssign, typeValue),
+                ctx.CONST() != null
+            );
             lastScope.AddVar(var);
         } else if (isVarUpdate) {
             Variable var = this.CheckVar(varInicialize);            
@@ -557,21 +558,25 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
     void TypeCompare(VariableType type0, VariableType type1) {
         if (type1.compareTo(type0) != 0)
+            ExitWithError("ERROR: mismatched types " + type1.print() + " and " + type0.print());
+    }
+
+    VariableType TypeAssign(VariableType type0, VariableType type1) {
+        if (type0 == null)
+            return type1;
+        
+        if (type1 == null)
+            return type0;
+        
+        if (!type0.IsAssignable(type1))
             ExitWithError("ERROR: cannot use " + type1.print() + " as type " + type0.print() + " in assignment");
+
+        JvmType type = type0.TypeAssign(type1);
+        return type == type0.getType()
+            ? type0
+            : type1;
     }
 
-    VariableType TypeCompatible(VariableType type0, VariableType type1) {
-        boolean isCompatible = type0.compareTo(type1) == 0;
-        if (!isCompatible) {
-
-            String nameType0 = JvmType.Names.get(type0.getType().value);
-            String nameType1 = JvmType.Names.get(type1.getType().value);
-
-            ExitWithError("ERROR: type " + nameType0 + " is not compatible with type " + nameType1);
-        }
-
-        return type0;
-    }
     //#endregion
     //#region Function
     FunctionDeclaration CheckFunction(Token token) {

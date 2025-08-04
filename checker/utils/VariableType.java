@@ -48,21 +48,32 @@ public class VariableType implements Comparable<VariableType> {
     }
 
     @Override
-    public int compareTo(VariableType arg0) {
-        if (
-            (arg0.getType() == JvmType.FLOAT32 && this.getType() == JvmType.FLOAT64)
-            || (arg0.getType() == JvmType.FLOAT64 && this.getType() == JvmType.FLOAT32))
-            return 0;
-        
+    public int compareTo(VariableType arg) {
         return
-            Integer.compare(this.getType().value, arg0.getType().value)
-            + Boolean.compare(this.getIsArray(), arg0.getIsArray())
-            + Integer.compare(this.getMaxSize(), arg0.getMaxSize());
+            Integer.compare(this.getType().value, arg.getType().value)
+            + CompareArrayMaxSize(arg);
+    }
+
+    public boolean IsAssignable(VariableType arg) {
+        if (CompareArrayMaxSize(arg) != 0)
+            return false;
+        
+        return TypeAssign(arg) != JvmType.ERROR;
+    }
+
+    public JvmType TypeAssign(VariableType arg) {
+        return JvmType.TypeAssign[arg.getType().ordinal()][this.getType().ordinal()];
     }
 
     public String print() {
         return !IsArray
             ? JvmType.Names.get(getType().value)
             : "[" + getMaxSize() + "]" + JvmType.Names.get(getType().value);
+    }
+
+    private int CompareArrayMaxSize(VariableType arg) {
+        return
+            Boolean.compare(this.getIsArray(), arg.getIsArray())
+            + Integer.compare(this.getMaxSize(), arg.getMaxSize());
     }
 }
