@@ -389,6 +389,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     @Override
     public VariableType visitVarWithIncrease(jvmParser.VarWithIncreaseContext ctx) {
         // TO DO
+        Variable var = this.CheckVar(ctx.ID().getSymbol());
+        VariableType varType = var.getType();
+
+        if (!varType.IsNumeric())
+            ExitWithError("ERROR: invalid operation in non-numeric type");
+
         return null;
     }
     //#endregion

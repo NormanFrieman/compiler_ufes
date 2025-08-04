@@ -1,5 +1,7 @@
 package checker.utils;
 
+import java.util.List;
+
 public class VariableType implements Comparable<VariableType> {
     public final JvmType Type;
     public boolean IsArray;
@@ -69,6 +71,20 @@ public class VariableType implements Comparable<VariableType> {
         return !IsArray
             ? JvmType.Names.get(getType().value)
             : "[" + getMaxSize() + "]" + JvmType.Names.get(getType().value);
+    }
+
+    public boolean IsNumeric() {
+        List<JvmType> numericTypes = List.of(
+            JvmType.UINT,
+            JvmType.INT,
+            JvmType.INT8,
+            JvmType.INT16,
+            JvmType.INT32,
+            JvmType.INT64,
+            JvmType.FLOAT32,
+            JvmType.FLOAT64
+        );
+        return numericTypes.contains(getType());
     }
 
     private int CompareArrayMaxSize(VariableType arg) {
