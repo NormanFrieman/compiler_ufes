@@ -34,7 +34,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             "append",
             0,
             null,
-            new VariableType(JvmType.STRING, true, -1),
+            new VariableType(JvmType.STRING, true, ArraySize.NO_ARRAY.value),
             params -> true
         );
 
@@ -58,7 +58,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             "len",
             0,
             null,
-            new VariableType(JvmType.INT, false, 0),
+            new VariableType(JvmType.INT, false, ArraySize.NO_ARRAY.value),
             params -> true
         );
 
@@ -66,7 +66,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
             "cap",
             0,
             null,
-            new VariableType(JvmType.INT, false, 0),
+            new VariableType(JvmType.INT, false, ArraySize.NO_ARRAY.value),
             params -> true
         );
 
@@ -356,7 +356,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     @Override
     public VariableType visitVarWithValue(jvmParser.VarWithValueContext ctx) {
         Token varInicialize = ctx.varInit;
-
         if (ctx.CONST() != null && ctx.ASSIGN() != null)
             ExitWithError("ERROR: unexpected :=, expecting =");
 
@@ -388,12 +387,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
     @Override
     public VariableType visitVarWithIncrease(jvmParser.VarWithIncreaseContext ctx) {
-        // TO DO
         Variable var = this.CheckVar(ctx.ID().getSymbol());
-        VariableType varType = var.getType();
-
-        if (!varType.IsNumeric())
-            ExitWithError("ERROR: invalid operation in non-numeric type");
+        this.CheckIncrease(var);
 
         return null;
     }
@@ -501,13 +496,26 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
     @Override
     public VariableType visitFor_cond(jvmParser.For_condContext ctx) {
-        // TO DO
+        Token token = ctx.ID(0).getSymbol();
+        Variable var = this.CheckVar(token);
+        VariableType type = null;
+
+        if (ctx.value() != null)
+            type = visit(ctx.value());
+        if (ctx.ID(1) != null)
+            type = visit(ctx.ID(1));
+        if (ctx.function_call() != null)
+            type = visit(ctx.function_call());
+
+        this.TypeCompare(var.getType(), type);
         return null;
     }
 
     @Override
     public VariableType visitFor_end(jvmParser.For_endContext ctx) {
-        // TO DO
+        Variable var = this.CheckVar(ctx.ID().getSymbol());
+        this.CheckIncrease(var);
+        
         return null;
     }
 
@@ -581,6 +589,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         return type == type0.getType()
             ? type0
             : type1;
+    }
+
+    void CheckIncrease(Variable var) {
+        VariableType varType = var.getType();
+
+        if (!varType.IsNumeric())
+            ExitWithError("ERROR: invalid operation in non-numeric type");
     }
 
     //#endregion

@@ -185,9 +185,9 @@ for_stmt:
 
 // CONDITIONAL
 if_init:
-    expr
-    | PAREN_LEFT expr PAREN_RIGHT
-    | var_assign SEMICOLON expr
+    expr #ifSimple
+    | PAREN_LEFT expr PAREN_RIGHT #ifWithParen
+    | var_assign SEMICOLON expr #ifWithVar
 ;
 
 if_stmt:
