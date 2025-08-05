@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.Token;
+import ast.AST;
+import ast.NodeKind;
 import generated.jvmParser;
 import generated.jvmParser.ExprValueContext;
 import generated.jvmParser.TypeContext;
@@ -17,10 +19,11 @@ import checker.utils.Scope;
 import checker.utils.Variable;
 import checker.utils.VariableType;
 
-public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
-    // Scopes
-    private LinkedList<Scope> scopes = new LinkedList<Scope>();
-    private Scope lastScope;
+public class SemanticChecker extends jvmParserBaseVisitor<AST> {
+    // // Scopes
+    // private LinkedList<Scope> scopes = new LinkedList<Scope>();
+    // private Scope lastScope;
+    AST root;
 
     // Functions
     private HashMap<String, FunctionDeclaration> functionsMap = new HashMap<String, FunctionDeclaration>();
@@ -87,9 +90,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
         functionsMap.put(toUpper.getName(), toUpper);
     }
 
+    //#region Program
+    @Override
+    public AST visitProgram(jvmParser.ProgramContext ctx) {
+        AST init = visit(ctx.init());
+        AST stmt = visit(ctx.stmt_sect());
+
+        AST ast = AST.NewSubtree(NodeKind.PROGRAM_NODE, null, null, init, stmt);
+    }
+    //#endregion
+
     //#region Imports
     @Override
-    public VariableType visitSimpleImport(jvmParser.SimpleImportContext ctx) {
+    public AST visitSimpleImport(jvmParser.SimpleImportContext ctx) {
         Token token = ctx.STRING_VALUE().getSymbol();
 
         String importName = token.getText().replaceAll("\"", "");
@@ -99,7 +112,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
     }
 
     @Override
-    public VariableType visitMultiImport(jvmParser.MultiImportContext ctx) {
+    public AST visitMultiImport(jvmParser.MultiImportContext ctx) {
         List<String> importNames = ctx.STRING_VALUE()
             .stream()
             .map(x -> x.getText().replaceAll("\"", ""))
@@ -113,7 +126,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
     //#region Expression
     @Override
-    public VariableType visitExprId(jvmParser.ExprIdContext ctx) {
+    public AST visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
 
         Variable var = this.CheckVar(id);
@@ -169,7 +182,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<VariableType> {
 
     //#region Visit types
     @Override
-    public VariableType visitUintType(jvmParser.UintTypeContext ctx) {
+    public AST visitUintType(jvmParser.UintTypeContext ctx) {
         return new VariableType(JvmType.UINT);
     }
 
