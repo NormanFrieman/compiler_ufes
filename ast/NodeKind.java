@@ -6,7 +6,9 @@ public enum NodeKind {
     FUNCTION_DECLARATION_NODE,
     SCOPE_NODE,
 
-    ASSIGN_NODE,
+    VAR_ASSIGN_NODE,
+    VAR_USING_NODE,
+
     FUNCTION_CALL_NODE,
 
     LOOP_NODE,

@@ -93,10 +93,11 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Program
     @Override
     public AST visitProgram(jvmParser.ProgramContext ctx) {
-        AST init = visit(ctx.init());
+        visit(ctx.init());
         AST stmt = visit(ctx.stmt_sect());
 
-        AST ast = AST.NewSubtree(NodeKind.PROGRAM_NODE, null, null, init, stmt);
+        this.root = AST.NewSubtree(NodeKind.PROGRAM_NODE, null, null, stmt);
+        return this.root;
     }
     //#endregion
 
