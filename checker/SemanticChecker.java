@@ -1,5 +1,6 @@
 package checker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -534,24 +535,27 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     public AST visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
         FunctionDeclaration function = this.CheckFunction(ctx.parent);
 
+        AST functionAst = new AST(NodeKind.FUNCTION_CALL_NODE, function.getName(), function.getReturnType());
+
         LinkedList<VariableType> params = new LinkedList<VariableType>();
+
         ctx.expr().forEach(e -> {
-            visit(e);
+            AST param = visit(e);
             VariableType type = this.lastType;
+
+            functionAst.AddChild(param);
             params.add(type);
         });
         function.CheckParams(params);
 
         this.lastType = function.getReturnType();
-        return null;
+        return functionAst;
     }
 
     @Override
     public AST visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
         this.CheckImports(ctx.parent);
-        visit(ctx.function_call());
-
-        return null;
+        return visit(ctx.function_call());
     }
 
     @Override
@@ -656,6 +660,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         lastAst.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
 
         return null;
+    }
+
+    @Override
+    public AST visitFor_stmt(jvmParser.For_stmtContext ctx) {
+        AST last = this.lastAst;
+
+        AST scopeFor = new AST(NodeKind.SCOPE_NODE, null, null);
+        this.lastAst = scopeFor;
+        
+        visit(ctx.for_declaration());
+        visit(ctx.scope());
+
+        return scopeFor;
     }
     //#endregion
 

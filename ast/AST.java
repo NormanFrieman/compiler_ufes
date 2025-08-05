@@ -1,5 +1,6 @@
 package ast;
 
+import java.nio.file.WatchEvent.Kind;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,28 +60,41 @@ public class AST {
 
     public void Print(int i) {
         if (kind == NodeKind.PROGRAM_NODE) {
-            System.out.printf("%d: [PROGRAM_NODE]\n", i);
+            System.out.printf("%s[PROGRAM_NODE]\n", Tabs(i));
             PrintChildren(i+1);
         }
 
         if (kind == NodeKind.FUNCTION_DECLARATION_NODE) {
-            System.out.printf("%d: [FUNCTION_DECLARATION_NODE] (%s) %s\n", i, type != null ? type.print() : "void", value);
+            PrintDotValue("FUNCTION_DECLARATION_NODE", i);
             PrintChildren(i+1);
         }
 
         if (kind == NodeKind.SCOPE_NODE) {
-            System.out.printf("%d: [SCOPE_NODE]\n", i);
+            System.out.printf("%s[SCOPE_NODE]\n", Tabs(i));
             PrintChildren(i+1);
         }
 
         if (kind == NodeKind.VAR_ASSIGN_NODE) {
-            System.out.printf("%d: [VAR_ASSIGN_NODE] (%s) %s\n", i, type.print(), value);
+            PrintDotValue("VAR_ASSIGN_NODE", i);
             PrintChildren(i+1);
         }
 
         if (kind == NodeKind.VALUE_NODE) {
-            System.out.printf("%d: [VALUE_NODE] (%s) %s\n", i, type.print(), value);
+            PrintDotValue("VALUE_NODE", i);
         }
+
+        if (kind == NodeKind.FUNCTION_CALL_NODE) {
+            PrintDotValue("FUNCTION_CALL_NODE", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.VAR_USE_NODE) {
+            PrintDotValue("VAR_USE_NODE", i);
+        }
+    }
+
+    public void PrintDotValue(String node, int i) {
+        System.out.printf("%s[%s] (%s) %s\n", Tabs(i), node, type != null ? type.print() : "void", value);
     }
 
     public void PrintChildren(int i) {
@@ -88,5 +102,13 @@ public class AST {
             if (child != null)
                 child.Print(i);
         }
+    }
+
+    public String Tabs(int i) {
+        String tab = "";
+        for (int j = 0; j < i; j++) {
+            tab = tab.concat("\t");
+        }
+        return tab;
     }
 }
