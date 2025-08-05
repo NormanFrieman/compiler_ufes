@@ -21,8 +21,8 @@ import checker.utils.VariableType;
 
 public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     // // Scopes
-    // private LinkedList<Scope> scopes = new LinkedList<Scope>();
-    // private Scope lastScope;
+    private LinkedList<Scope> scopes = new LinkedList<Scope>();
+    private Scope lastScope;
     AST root;
 
     // Functions
@@ -30,6 +30,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     // Import list
     private HashMap<String, String> imports = new HashMap<String, String>();
+    
+    // Type aux
+    private VariableType lastType;
 
     public SemanticChecker() {
         //#region Declaring functions
@@ -130,46 +133,56 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     public AST visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
 
-        Variable var = this.CheckVar(id);
-        return var.getType();
+        this.lastType = this.CheckVar(id).getType();
+        return null;
     }
     
     @Override
-    public VariableType visitExprValue(jvmParser.ExprValueContext ctx) {
+    public AST visitExprValue(jvmParser.ExprValueContext ctx) {
         return visit(ctx.value());
     }
 
     @Override
-    public VariableType visitExprFunctionCall(jvmParser.ExprFunctionCallContext ctx) {
+    public AST visitExprFunctionCall(jvmParser.ExprFunctionCallContext ctx) {
         return visit(ctx.function_call());
     }
 
     @Override
-    public VariableType visitExprNull(jvmParser.ExprNullContext ctx) {
+    public AST visitExprNull(jvmParser.ExprNullContext ctx) {
+        this.lastType = null;
         return null;
     }
 
     @Override
-    public VariableType visitExprMath(jvmParser.ExprMathContext ctx) {
-        VariableType type0 = visit(ctx.expr(0));
-        VariableType type1 = visit(ctx.expr(1));
+    public AST visitExprMath(jvmParser.ExprMathContext ctx) {
+        visit(ctx.expr(0));
+        VariableType type0 = this.lastType;
+
+        visit(ctx.expr(1));
+        VariableType type1 = this.lastType;
 
         this.TypeCompare(type0, type1);
-        return type0;
+        this.lastType = type0;
+        return null;
     }
 
     @Override
-    public VariableType visitExprBool(jvmParser.ExprBoolContext ctx) {
-        VariableType type0 = visit(ctx.expr(0));
-        VariableType type1 = visit(ctx.expr(1));
+    public AST visitExprBool(jvmParser.ExprBoolContext ctx) {
+        visit(ctx.expr(0));
+        VariableType type0 = this.lastType;
+
+        visit(ctx.expr(1));
+        VariableType type1 = this.lastType;
 
         this.TypeCompare(type0, type1);
-        return new VariableType(JvmType.BOOL);
+        this.lastType = new VariableType(JvmType.BOOL);
+        return null;
     }
 
     @Override
-    public VariableType visitExprNotBool(jvmParser.ExprNotBoolContext ctx) {
-        VariableType var = visit(ctx.expr());
+    public AST visitExprNotBool(jvmParser.ExprNotBoolContext ctx) {
+        visit(ctx.expr());
+        VariableType var = this.lastType;
 
         if (var.getType() != JvmType.BOOL) {
             String nameType = JvmType.Names.get(var.getType().value);
@@ -177,135 +190,159 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             ExitWithError("ERROR: type " + nameType + "is not boolean");
         }
 
-        return var;
+        return null;
     }
     //#endregion
 
     //#region Visit types
     @Override
     public AST visitUintType(jvmParser.UintTypeContext ctx) {
-        return new VariableType(JvmType.UINT);
+        this.lastType = new VariableType(JvmType.UINT);
+        return null;
     }
 
     @Override
-    public VariableType visitIntType(jvmParser.IntTypeContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitIntType(jvmParser.IntTypeContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 
 	@Override
-    public VariableType visitInt8Type(jvmParser.Int8TypeContext ctx) {
-        return new VariableType(JvmType.INT8);
+    public AST visitInt8Type(jvmParser.Int8TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.INT8);
+        return null;
     }
 
 	@Override
-    public VariableType visitInt16Type(jvmParser.Int16TypeContext ctx) {
-        return new VariableType(JvmType.INT16);
+    public AST visitInt16Type(jvmParser.Int16TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.INT16);
+        return null;
     }
 
 	@Override
-    public VariableType visitInt32Type(jvmParser.Int32TypeContext ctx) {
-        return new VariableType(JvmType.INT32);
+    public AST visitInt32Type(jvmParser.Int32TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.INT32);
+        return null;
     }
 
 	@Override
-    public VariableType visitInt64Type(jvmParser.Int64TypeContext ctx) {
-        return new VariableType(JvmType.INT64);
+    public AST visitInt64Type(jvmParser.Int64TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.INT64);
+        return null;
     }
 
 	@Override
-    public VariableType visitFloat32Type(jvmParser.Float32TypeContext ctx) {
-        return new VariableType(JvmType.FLOAT32);
+    public AST visitFloat32Type(jvmParser.Float32TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.FLOAT32);
+        return null;
     }
 
 	@Override
-    public VariableType visitFloat64Type(jvmParser.Float64TypeContext ctx) {
-        return new VariableType(JvmType.FLOAT64);
+    public AST visitFloat64Type(jvmParser.Float64TypeContext ctx) {
+        this.lastType = new VariableType(JvmType.FLOAT64);
+        return null;
     }
 
 	@Override
-    public VariableType visitStringType(jvmParser.StringTypeContext ctx) {
-        return new VariableType(JvmType.STRING);
+    public AST visitStringType(jvmParser.StringTypeContext ctx) {
+        this.lastType = new VariableType(JvmType.STRING);
+        return null;
     }
 
 	@Override
-    public VariableType visitBoolType(jvmParser.BoolTypeContext ctx) {
-        return new VariableType(JvmType.BOOL);
+    public AST visitBoolType(jvmParser.BoolTypeContext ctx) {
+        this.lastType = new VariableType(JvmType.BOOL);
+        return null;
     }
 
     @Override
-    public VariableType visitArrayType(jvmParser.ArrayTypeContext ctx) {
+    public AST visitArrayType(jvmParser.ArrayTypeContext ctx) {
         int maxSize = ctx.size == null ? ArraySize.NO_EXPLICIT_SIZE.value : Integer.parseInt(ctx.size.getText());
 
-        VariableType type = visit(ctx.type());
-        type.setIsArray(true);
-        type.setMaxSize(maxSize);
+        visit(ctx.type());
+        this.lastType.setIsArray(true);
+        this.lastType.setMaxSize(maxSize);
         
-        return type;
+        return null;
     }
     //#endregion
 
     //#region Value
     //#region Visit primitive values
     @Override
-    public VariableType visitValueIntD(jvmParser.ValueIntDContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitValueIntD(jvmParser.ValueIntDContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueIntH(jvmParser.ValueIntHContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitValueIntH(jvmParser.ValueIntHContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueIntO(jvmParser.ValueIntOContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitValueIntO(jvmParser.ValueIntOContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueIntB(jvmParser.ValueIntBContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitValueIntB(jvmParser.ValueIntBContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueIntN(jvmParser.ValueIntNContext ctx) {
-        return new VariableType(JvmType.INT);
+    public AST visitValueIntN(jvmParser.ValueIntNContext ctx) {
+        this.lastType = new VariableType(JvmType.INT);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueFloat(jvmParser.ValueFloatContext ctx) {
-        return new VariableType(JvmType.FLOAT32);
+    public AST visitValueFloat(jvmParser.ValueFloatContext ctx) {
+        this.lastType = new VariableType(JvmType.FLOAT32);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueFloatN(jvmParser.ValueFloatNContext ctx) {
-        return new VariableType(JvmType.FLOAT32);
+    public AST visitValueFloatN(jvmParser.ValueFloatNContext ctx) {
+        this.lastType = new VariableType(JvmType.FLOAT32);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueString(jvmParser.ValueStringContext ctx) {
-        return new VariableType(JvmType.STRING);
+    public AST visitValueString(jvmParser.ValueStringContext ctx) {
+        this.lastType = new VariableType(JvmType.STRING);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueChar(jvmParser.ValueCharContext ctx) {
-        return new VariableType(JvmType.STRING);
+    public AST visitValueChar(jvmParser.ValueCharContext ctx) {
+        this.lastType = new VariableType(JvmType.STRING);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueTrue(jvmParser.ValueTrueContext ctx) {
-        return new VariableType(JvmType.BOOL);
+    public AST visitValueTrue(jvmParser.ValueTrueContext ctx) {
+        this.lastType = new VariableType(JvmType.BOOL);
+        return null;
     }
 	
 	@Override
-    public VariableType visitValueFalse(jvmParser.ValueFalseContext ctx) {
-        return new VariableType(JvmType.BOOL);
+    public AST visitValueFalse(jvmParser.ValueFalseContext ctx) {
+        this.lastType = new VariableType(JvmType.BOOL);
+        return null;
     }
     //#endregion
 
     //#region Visit Composite values
     @Override
-    public VariableType visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
-        VariableType sizeType = (ctx.size != null) ? visit(ctx.size) : null;
+    public AST visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
+        if (ctx.size != null)
+            visit(ctx.size);
+
+        VariableType sizeType = (ctx.size != null) ? this.lastType : null;
         VariableType expectedSizeType = new VariableType(JvmType.INT);
 
         // Check if size value is int
@@ -314,9 +351,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         }
 
         // Check if values of array are compatible with type
-        VariableType typeArray = visit(ctx.type());
+        visit(ctx.type());
+        VariableType typeArray = this.lastType;
+
         ctx.values.forEach(value -> {
-            VariableType valueType = visit(value);
+            visit(value);
+            VariableType valueType = this.lastType;
+
             this.TypeCompare(typeArray, valueType);
         });
 
@@ -331,23 +372,26 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             ExitWithError("ERROR: array index " + typeArray.getMaxSize() + " out of bounds");
         
         typeArray.setIsArray(true);
-        return typeArray;
-    }
-
-    @Override
-    public VariableType visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
+        this.lastType = typeArray;
         return null;
     }
 
     @Override
-    public VariableType visitValueConversion(jvmParser.ValueConversionContext ctx) {
+    public AST visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
+        return null;
+    }
+
+    @Override
+    public AST visitValueConversion(jvmParser.ValueConversionContext ctx) {
         visit(ctx.expr());
-        return visit(ctx.type());
+        visit(ctx.type());
+        return null;
+        // TO DO
         // VERIFY TYPE CONVERSIONS
     }
 
     @Override
-    public VariableType visitValueProp(jvmParser.ValuePropContext ctx) {
+    public AST visitValueProp(jvmParser.ValuePropContext ctx) {
         return null;
     }
     //#endregion
@@ -355,10 +399,11 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     //#region Var assign
     @Override
-    public VariableType visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
+    public AST visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
         Token var = ctx.ID().getSymbol();
 
-        VariableType type = visit(ctx.type());
+        visit(ctx.type());
+        VariableType type = this.lastType;
 
         lastScope.AddVar(
             new Variable(var.getText(), var.getLine(), type, ctx.CONST() != null)
@@ -368,7 +413,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     }
 
     @Override
-    public VariableType visitVarWithValue(jvmParser.VarWithValueContext ctx) {
+    public AST visitVarWithValue(jvmParser.VarWithValueContext ctx) {
         Token varInicialize = ctx.varInit;
         if (ctx.CONST() != null && ctx.ASSIGN() != null)
             ExitWithError("ERROR: unexpected :=, expecting =");
@@ -379,8 +424,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         boolean isVarUpdate = ctx.ASSIGN_VAR() != null;
 
         if (isVarInit) {
-            VariableType typeAssign = ctx.type() != null ? visit(ctx.type()) : null;
-            VariableType typeValue = visit(ctx.expr());
+            if (ctx.type() != null)
+                visit(ctx.type());
+
+            VariableType typeAssign = ctx.type() != null ? this.lastType : null;
+            visit(ctx.expr());
+            VariableType typeValue = this.lastType;
             
             Variable var = new Variable(
                 varInicialize.getText(),
@@ -390,8 +439,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             );
             lastScope.AddVar(var);
         } else if (isVarUpdate) {
-            Variable var = this.CheckVar(varInicialize);            
-            VariableType assignType = visit(ctx.expr());
+            Variable var = this.CheckVar(varInicialize); 
+            visit(ctx.expr());
+            VariableType assignType = this.lastType;
 
             this.TypeCompare(var.getType(), assignType);
         }
@@ -400,7 +450,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     }
 
     @Override
-    public VariableType visitVarWithIncrease(jvmParser.VarWithIncreaseContext ctx) {
+    public AST visitVarWithIncrease(jvmParser.VarWithIncreaseContext ctx) {
         Variable var = this.CheckVar(ctx.ID().getSymbol());
         this.CheckIncrease(var);
 
@@ -410,12 +460,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     //#region Functions
     @Override
-    public VariableType visitFunction_declaration(jvmParser.Function_declarationContext ctx) {
+    public AST visitFunction_declaration(jvmParser.Function_declarationContext ctx) {
         String functionName = ctx.functionName.getText();
-        VariableType functionType = null;
         if (ctx.functionType != null)
-            functionType = visit(ctx.functionType);
+            visit(ctx.functionType);
         
+        VariableType functionType = ctx.functionType != null ? this.lastType : null;
+
         List<Token> ids = ctx.ids;
         List<TypeContext> types = ctx.types;
 
@@ -423,7 +474,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         
         for (int i = 0; i < ids.size(); i++) {
             String varName = ids.get(i).getText();
-            VariableType type = visit(types.get(i));
+            visit(types.get(i));
+            VariableType type = this.lastType;
 
             lastScope.AddVar(new Variable(varName, ids.get(i).getLine(), type));
             paramsType.add(type);
@@ -438,39 +490,46 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             null);
 
         this.AddFunction(function);
-
-        return functionType;
+        this.lastType = functionType;
+        return null;
     }
 
     @Override
-    public VariableType visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
+    public AST visitFunctionWithParam(jvmParser.FunctionWithParamContext ctx) {
         FunctionDeclaration function = this.CheckFunction(ctx.parent);
 
         LinkedList<VariableType> params = new LinkedList<VariableType>();
         ctx.expr().forEach(e -> {
-            VariableType type = visit(e);
+            visit(e);
+            VariableType type = this.lastType;
             params.add(type);
         });
         function.CheckParams(params);
 
-        return function.getReturnType();
+        this.lastType = function.getReturnType();
+        return null;
     }
 
     @Override
-    public VariableType visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
+    public AST visitFunctionRecursive(jvmParser.FunctionRecursiveContext ctx) {
         this.CheckImports(ctx.parent);
-        return visit(ctx.function_call());
+        visit(ctx.function_call());
+
+        return null;
     }
 
     @Override
-    public VariableType visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
+    public AST visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
         Scope scope = new Scope();
 
         scopes.add(scope);
         lastScope = scope;
 
-        VariableType functionType = visit(ctx.function_declaration());
-        VariableType scopeType = visit(ctx.scope());
+        visit(ctx.function_declaration());
+        VariableType functionType = this.lastType;
+
+        visit(ctx.scope());
+        VariableType scopeType = this.lastType;
 
         Boolean functionTypeIsNull = functionType == null;
         Boolean scopeTypeIsNull = scopeType == null;
@@ -489,19 +548,21 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     }
     
     @Override
-    public VariableType visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
+    public AST visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
         if (ctx.expr() == null)
             return null;
         
-        return visit(ctx.expr());
+        visit(ctx.expr());
+        return null;
     }
     //#endregion
 
     //#region Loop
     @Override
-    public VariableType visitFor_init(jvmParser.For_initContext ctx) {
+    public AST visitFor_init(jvmParser.For_initContext ctx) {
         Token var = ctx.ID().getSymbol();
-        VariableType type = visit(ctx.value());
+        visit(ctx.value());
+        VariableType type = this.lastType;
 
         lastScope.AddVar(new Variable(var.getText(), var.getLine(), type));
 
@@ -509,24 +570,30 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     }
 
     @Override
-    public VariableType visitFor_cond(jvmParser.For_condContext ctx) {
+    public AST visitFor_cond(jvmParser.For_condContext ctx) {
         Token token = ctx.ID(0).getSymbol();
         Variable var = this.CheckVar(token);
         VariableType type = null;
 
-        if (ctx.value() != null)
-            type = visit(ctx.value());
-        if (ctx.ID(1) != null)
-            type = visit(ctx.ID(1));
-        if (ctx.function_call() != null)
-            type = visit(ctx.function_call());
+        if (ctx.value() != null) {
+            visit(ctx.value());
+            type = this.lastType;
+        }
+        if (ctx.ID(1) != null) {
+            visit(ctx.ID(1));
+            type = this.lastType;
+        }
+        if (ctx.function_call() != null) {
+            visit(ctx.function_call());
+            type = this.lastType;
+        }
 
         this.TypeCompare(var.getType(), type);
         return null;
     }
 
     @Override
-    public VariableType visitFor_end(jvmParser.For_endContext ctx) {
+    public AST visitFor_end(jvmParser.For_endContext ctx) {
         Variable var = this.CheckVar(ctx.ID().getSymbol());
         this.CheckIncrease(var);
         
@@ -534,7 +601,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     }
 
     @Override
-    public VariableType visitFor_range(jvmParser.For_rangeContext ctx) {
+    public AST visitFor_range(jvmParser.For_rangeContext ctx) {
         List<Token> vars = ctx.ID()
             .stream()
             .map(x -> x.getSymbol())
