@@ -10,6 +10,8 @@ public enum NodeKind {
     VAR_UPDATE_NODE,
     VAR_USE_NODE,
 
+    VALUE_NODE,
+
     NULL_USE_NODE,
 
     FUNCTION_CALL_NODE,

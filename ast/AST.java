@@ -57,28 +57,36 @@ public class AST {
     }
     //#endregion
 
-    public void Print() {
+    public void Print(int i) {
         if (kind == NodeKind.PROGRAM_NODE) {
-            System.out.println("Program");
-            PrintChildren();
+            System.out.printf("%d: [PROGRAM_NODE]\n", i);
+            PrintChildren(i+1);
         }
 
         if (kind == NodeKind.FUNCTION_DECLARATION_NODE) {
-            System.out.printf("(%s) %s ", type != null ? type.print() : "void", value);
-            PrintChildren();
+            System.out.printf("%d: [FUNCTION_DECLARATION_NODE] (%s) %s\n", i, type != null ? type.print() : "void", value);
+            PrintChildren(i+1);
         }
 
         if (kind == NodeKind.SCOPE_NODE) {
-            System.out.println("Scope");
-            PrintChildren();
+            System.out.printf("%d: [SCOPE_NODE]\n", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.VAR_ASSIGN_NODE) {
+            System.out.printf("%d: [VAR_ASSIGN_NODE] (%s) %s\n", i, type.print(), value);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.VALUE_NODE) {
+            System.out.printf("%d: [VALUE_NODE] (%s) %s\n", i, type.print(), value);
         }
     }
 
-    public void PrintChildren() {
+    public void PrintChildren(int i) {
         for (AST child : children) {
-            System.out.println(child.kind);
             if (child != null)
-                child.Print();
+                child.Print(i);
         }
     }
 }

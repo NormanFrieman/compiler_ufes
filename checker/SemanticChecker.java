@@ -301,67 +301,67 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     @Override
     public AST visitValueIntD(jvmParser.ValueIntDContext ctx) {
         this.lastType = new VariableType(JvmType.INT);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.INT_DEC().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueIntH(jvmParser.ValueIntHContext ctx) {
         this.lastType = new VariableType(JvmType.INT);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.INT_HEX().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueIntO(jvmParser.ValueIntOContext ctx) {
         this.lastType = new VariableType(JvmType.INT);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.INT_OCT().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueIntB(jvmParser.ValueIntBContext ctx) {
         this.lastType = new VariableType(JvmType.INT);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.INT_BIN().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueIntN(jvmParser.ValueIntNContext ctx) {
         this.lastType = new VariableType(JvmType.INT);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.NEGATIVE_INT_VALUE().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueFloat(jvmParser.ValueFloatContext ctx) {
         this.lastType = new VariableType(JvmType.FLOAT32);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.FLOAT_LITERAL().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueFloatN(jvmParser.ValueFloatNContext ctx) {
         this.lastType = new VariableType(JvmType.FLOAT32);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.NEGATIVE_FLOAT_LITERAL().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueString(jvmParser.ValueStringContext ctx) {
         this.lastType = new VariableType(JvmType.STRING);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.STRING_VALUE().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueChar(jvmParser.ValueCharContext ctx) {
         this.lastType = new VariableType(JvmType.STRING);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.CHAR_VALUE().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueTrue(jvmParser.ValueTrueContext ctx) {
         this.lastType = new VariableType(JvmType.BOOL);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.TRUE().getText(), lastType);
     }
 	
 	@Override
     public AST visitValueFalse(jvmParser.ValueFalseContext ctx) {
         this.lastType = new VariableType(JvmType.BOOL);
-        return null;
+        return new AST(NodeKind.VALUE_NODE, ctx.FALSE().getText(), lastType);
     }
     //#endregion
 
@@ -456,7 +456,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
                 visit(ctx.type());
 
             VariableType typeAssign = ctx.type() != null ? this.lastType : null;
-            visit(ctx.expr());
+            AST value = visit(ctx.expr());
             VariableType typeValue = this.lastType;
             
             Variable var = new Variable(
@@ -468,6 +468,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             lastAst.AddVar(var);
 
             varAst = new AST(NodeKind.VAR_ASSIGN_NODE, var.getName(), var.getType());
+            varAst.AddChild(value);
         } else if (isVarUpdate) {
             Variable var = this.CheckVar(varInicialize); 
             visit(ctx.expr());

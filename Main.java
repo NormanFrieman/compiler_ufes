@@ -27,7 +27,7 @@ public class Main {
         SemanticChecker checker = new SemanticChecker();
         AST astTree = checker.visit(tree);
 
-        astTree.Print();
+        astTree.Print(0);
 
         System.out.println("PARSE SUCCESSFUL!");
         // checker.printTables();
