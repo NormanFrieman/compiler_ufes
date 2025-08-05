@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.Token;
 import ast.AST;
 import ast.NodeKind;
 import generated.jvmParser;
+import generated.jvmParser.CommandContext;
 import generated.jvmParser.ExprValueContext;
 import generated.jvmParser.TypeContext;
 import generated.jvmParserBaseVisitor;
@@ -20,7 +21,7 @@ import checker.utils.Variable;
 import checker.utils.VariableType;
 
 public class SemanticChecker extends jvmParserBaseVisitor<AST> {
-    // // Scopes
+    // Scopes
     private LinkedList<Scope> scopes = new LinkedList<Scope>();
     private Scope lastScope;
     AST root;
@@ -101,6 +102,18 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
         this.root = AST.NewSubtree(NodeKind.PROGRAM_NODE, null, null, stmt);
         return this.root;
+    }
+
+    @Override
+    public AST visitScope(jvmParser.ScopeContext ctx) {
+        AST scope = AST.NewSubtree(NodeKind.SCOPE_NODE, null, null, null);
+
+        List<CommandContext> commands = ctx.command();
+        foreach (jvmParser.CommandContext command : commands) {
+            scope.AddChild(visit(command));
+        }
+
+        return scope;
     }
     //#endregion
 
@@ -491,7 +504,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
         this.AddFunction(function);
         this.lastType = functionType;
-        return null;
+
+        return AST.NewSubtree(NodeKind.FUNCTION_DECLARATION_NODE, functionName, functionType, null);
     }
 
     @Override
@@ -520,15 +534,15 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
-        Scope scope = new Scope();
-
-        scopes.add(scope);
-        lastScope = scope;
-
-        visit(ctx.function_declaration());
+        // Scope scope = new Scope();
+        
+        // scopes.add(scope);
+        // lastScope = scope;
+        
+        AST funcDecl = visit(ctx.function_declaration());
         VariableType functionType = this.lastType;
-
-        visit(ctx.scope());
+        
+        AST scope = visit(ctx.scope());
         VariableType scopeType = this.lastType;
 
         Boolean functionTypeIsNull = functionType == null;
@@ -544,7 +558,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             ExitWithError("Missing return");
 
         TypeCompare(functionType, scopeType);
-        return null;
+
+        funcDecl.AddChild(scope);
+        return funcDecl;
     }
     
     @Override

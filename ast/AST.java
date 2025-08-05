@@ -3,18 +3,18 @@ package ast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import checker.utils.JvmType;
 import checker.utils.Variable;
+import checker.utils.VariableType;
 
 public class AST {
     public NodeKind kind;
     
     public String value;
-    public JvmType type;
+    public VariableType type;
 
     private List<AST> children;
 
-    public AST(NodeKind kind, String value, JvmType type) {
+    public AST(NodeKind kind, String value, VariableType type) {
         this.kind = kind;
         this.value = value;
         this.type = type;
@@ -29,7 +29,7 @@ public class AST {
         return children.get(index);
     }
 
-    public static AST NewSubtree(NodeKind kind, String value, JvmType type, AST... children) {
+    public static AST NewSubtree(NodeKind kind, String value, VariableType type, AST... children) {
         AST node = new AST(kind, value, type);
         for (AST child : children) {
             node.AddChild(child);
