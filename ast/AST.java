@@ -12,13 +12,17 @@ public class AST {
     public String value;
     public VariableType type;
 
-    private List<AST> children;
+    private List<AST> children = new ArrayList<AST>();
 
     public AST(NodeKind kind, String value, VariableType type) {
         this.kind = kind;
         this.value = value;
         this.type = type;
         this.children = new ArrayList<AST>();
+    }
+
+    public String GetValue() {
+        return value;
     }
 
     public void AddChild(AST child) {
@@ -52,4 +56,29 @@ public class AST {
         return variableMap.get(name);
     }
     //#endregion
+
+    public void Print() {
+        if (kind == NodeKind.PROGRAM_NODE) {
+            System.out.println("Program");
+            PrintChildren();
+        }
+
+        if (kind == NodeKind.FUNCTION_DECLARATION_NODE) {
+            System.out.printf("(%s) %s ", type != null ? type.print() : "void", value);
+            PrintChildren();
+        }
+
+        if (kind == NodeKind.SCOPE_NODE) {
+            System.out.println("Scope");
+            PrintChildren();
+        }
+    }
+
+    public void PrintChildren() {
+        for (AST child : children) {
+            System.out.println(child.kind);
+            if (child != null)
+                child.Print();
+        }
+    }
 }

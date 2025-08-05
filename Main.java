@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import ast.AST;
 import generated.jvmLexer;
 import generated.jvmParser;
 
@@ -24,7 +25,9 @@ public class Main {
             return;
         
         SemanticChecker checker = new SemanticChecker();
-        checker.visit(tree);
+        AST astTree = checker.visit(tree);
+
+        astTree.Print();
 
         System.out.println("PARSE SUCCESSFUL!");
         // checker.printTables();

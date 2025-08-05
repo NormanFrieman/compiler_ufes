@@ -7,7 +7,10 @@ public enum NodeKind {
     SCOPE_NODE,
 
     VAR_ASSIGN_NODE,
-    VAR_USING_NODE,
+    VAR_UPDATE_NODE,
+    VAR_USE_NODE,
+
+    NULL_USE_NODE,
 
     FUNCTION_CALL_NODE,
 

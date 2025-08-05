@@ -11,20 +11,21 @@ import ast.NodeKind;
 import generated.jvmParser;
 import generated.jvmParser.CommandContext;
 import generated.jvmParser.ExprValueContext;
+import generated.jvmParser.Function_stmtContext;
 import generated.jvmParser.TypeContext;
 import generated.jvmParserBaseVisitor;
 import checker.utils.ArraySize;
 import checker.utils.FunctionDeclaration;
 import checker.utils.JvmType;
-import checker.utils.Scope;
 import checker.utils.Variable;
 import checker.utils.VariableType;
 
 public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     // Scopes
-    private LinkedList<Scope> scopes = new LinkedList<Scope>();
-    private Scope lastScope;
+    // private LinkedList<Scope> scopes = new LinkedList<Scope>();
+    // private Scope lastScope;
     AST root;
+    private AST lastAst;
 
     // Functions
     private HashMap<String, FunctionDeclaration> functionsMap = new HashMap<String, FunctionDeclaration>();
@@ -97,22 +98,37 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Program
     @Override
     public AST visitProgram(jvmParser.ProgramContext ctx) {
+        this.root = new AST(NodeKind.PROGRAM_NODE, null, null);
         visit(ctx.init());
-        AST stmt = visit(ctx.stmt_sect());
+        visit(ctx.stmt_sect());
 
-        this.root = AST.NewSubtree(NodeKind.PROGRAM_NODE, null, null, stmt);
         return this.root;
     }
 
     @Override
-    public AST visitScope(jvmParser.ScopeContext ctx) {
-        AST scope = AST.NewSubtree(NodeKind.SCOPE_NODE, null, null, null);
+    public AST visitStmt_sect(jvmParser.Stmt_sectContext ctx) {
+        List<Function_stmtContext> functions = ctx.function_stmt();
 
-        List<CommandContext> commands = ctx.command();
-        foreach (jvmParser.CommandContext command : commands) {
-            scope.AddChild(visit(command));
+        for (Function_stmtContext func : functions) {
+            AST child = visit(func);
+            if (child != null)
+                this.root.AddChild(child);
         }
 
+        return null;
+    }
+
+    @Override
+    public AST visitScope(jvmParser.ScopeContext ctx) {
+        AST scope = new AST(NodeKind.SCOPE_NODE, null, null);
+        this.lastAst = scope;
+
+        List<CommandContext> commands = ctx.command();
+        for (CommandContext command : commands) {
+            AST child = visit(command);
+            if (child != null)
+                scope.AddChild(child);
+        }
         return scope;
     }
     //#endregion
@@ -145,9 +161,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     @Override
     public AST visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
+        Variable var = this.CheckVar(id);
 
-        this.lastType = this.CheckVar(id).getType();
-        return null;
+        return new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
     }
     
     @Override
@@ -163,7 +179,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     @Override
     public AST visitExprNull(jvmParser.ExprNullContext ctx) {
         this.lastType = null;
-        return null;
+        return new AST(NodeKind.NULL_USE_NODE, null, null);
     }
 
     @Override
@@ -413,16 +429,14 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Var assign
     @Override
     public AST visitVarWithoutValue(jvmParser.VarWithoutValueContext ctx) {
-        Token var = ctx.ID().getSymbol();
+        Token varToken = ctx.ID().getSymbol();
 
         visit(ctx.type());
         VariableType type = this.lastType;
+        Variable var = new Variable(varToken.getText(), varToken.getLine(), type, ctx.CONST() != null);
 
-        lastScope.AddVar(
-            new Variable(var.getText(), var.getLine(), type, ctx.CONST() != null)
-        );
-
-        return null;
+        lastAst.AddVar(var);
+        return new AST(NodeKind.VAR_ASSIGN_NODE, var.getName(), var.getType());
     }
 
     @Override
@@ -436,6 +450,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             || (ctx.CONST() != null && ctx.ASSIGN_VAR() != null);
         boolean isVarUpdate = ctx.ASSIGN_VAR() != null;
 
+        AST varAst = null;
         if (isVarInit) {
             if (ctx.type() != null)
                 visit(ctx.type());
@@ -450,16 +465,21 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
                 TypeAssign(typeAssign, typeValue),
                 ctx.CONST() != null
             );
-            lastScope.AddVar(var);
+            lastAst.AddVar(var);
+
+            varAst = new AST(NodeKind.VAR_ASSIGN_NODE, var.getName(), var.getType());
         } else if (isVarUpdate) {
             Variable var = this.CheckVar(varInicialize); 
             visit(ctx.expr());
             VariableType assignType = this.lastType;
 
             this.TypeCompare(var.getType(), assignType);
+            varAst = new AST(NodeKind.VAR_UPDATE_NODE, var.getName(), var.getType());
         }
 
-        return null;
+        if (varAst == null)
+            ExitWithError("Internal Error: node not created");
+        return varAst;
     }
 
     @Override
@@ -480,6 +500,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         
         VariableType functionType = ctx.functionType != null ? this.lastType : null;
 
+        AST scope = new AST(NodeKind.FUNCTION_DECLARATION_NODE, functionName, functionType);
+
         List<Token> ids = ctx.ids;
         List<TypeContext> types = ctx.types;
 
@@ -490,10 +512,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             visit(types.get(i));
             VariableType type = this.lastType;
 
-            lastScope.AddVar(new Variable(varName, ids.get(i).getLine(), type));
+            scope.AddVar(new Variable(varName, ids.get(i).getLine(), type));
             paramsType.add(type);
         }
-
 
         FunctionDeclaration function = new FunctionDeclaration(
             functionName,
@@ -505,7 +526,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         this.AddFunction(function);
         this.lastType = functionType;
 
-        return AST.NewSubtree(NodeKind.FUNCTION_DECLARATION_NODE, functionName, functionType, null);
+        return scope;
     }
 
     @Override
@@ -534,11 +555,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitFunction_stmt(jvmParser.Function_stmtContext ctx) {
-        // Scope scope = new Scope();
-        
-        // scopes.add(scope);
-        // lastScope = scope;
-        
         AST funcDecl = visit(ctx.function_declaration());
         VariableType functionType = this.lastType;
         
@@ -548,8 +564,9 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Boolean functionTypeIsNull = functionType == null;
         Boolean scopeTypeIsNull = scopeType == null;
 
+        funcDecl.AddChild(scope);
         if (functionTypeIsNull && scopeTypeIsNull)
-            return null;
+            return funcDecl;
 
         if (functionTypeIsNull)
             ExitWithError("Too many return values");
@@ -558,8 +575,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             ExitWithError("Missing return");
 
         TypeCompare(functionType, scopeType);
-
-        funcDecl.AddChild(scope);
         return funcDecl;
     }
     
@@ -580,7 +595,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         visit(ctx.value());
         VariableType type = this.lastType;
 
-        lastScope.AddVar(new Variable(var.getText(), var.getLine(), type));
+        lastAst.AddVar(new Variable(var.getText(), var.getLine(), type));
 
         return null;
     }
@@ -627,17 +642,17 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Token iterVar = vars.get(1);        
         Token lastVar = vars.get(2);
         
-        boolean isDeclared = lastScope.VarIsDeclared(lastVar.getText());
+        boolean isDeclared = lastAst.VarIsDeclared(lastVar.getText());
         if (!isDeclared)
             ExitWithError("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
 
-        Variable lastVarDeclaration = lastScope.GetVar(lastVar.getText());
+        Variable lastVarDeclaration = lastAst.GetVar(lastVar.getText());
         JvmType type = lastVarDeclaration.getType().getType();
 
         // Index of For Range
-        lastScope.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
+        lastAst.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
         // Iter of For Range
-        lastScope.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
+        lastAst.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
 
         return null;
     }
@@ -660,7 +675,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     Variable CheckVar(Token token) {
         String varName = token.getText();
 
-        Variable var = this.lastScope.GetVar(varName);
+        Variable var = this.lastAst.GetVar(varName);
         if (var == null)
             ExitWithError("ERROR: undefined " + varName + " in line " + token.getLine());
 
