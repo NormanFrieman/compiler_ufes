@@ -4,6 +4,7 @@ public enum NodeKind {
     PROGRAM_NODE,
 
     FUNCTION_DECLARATION_NODE,
+    FOR_DECLARATION_NODE,
     SCOPE_NODE,
 
     VAR_ASSIGN_NODE,
@@ -11,6 +12,7 @@ public enum NodeKind {
     VAR_USE_NODE,
 
     VALUE_NODE,
+    VALUE_ARRAY_NODE,
 
     NULL_USE_NODE,
 

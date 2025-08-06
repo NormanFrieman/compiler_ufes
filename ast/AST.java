@@ -13,6 +13,7 @@ public class AST {
     public String value;
     public VariableType type;
 
+    private AST master;
     private List<AST> children = new ArrayList<AST>();
 
     public AST(NodeKind kind, String value, VariableType type) {
@@ -27,20 +28,32 @@ public class AST {
     }
 
     public void AddChild(AST child) {
+        if (child == null)
+            return;
+            
+        child.AddMaster(this);
         children.add(child);
+    }
+
+    public void AddChild(List<AST> childs) {
+        if (childs == null)
+            return;
+        
+        for (AST child : childs) {
+            AddChild(child);
+        }
     }
 
     public AST GetChild(int index) {
         return children.get(index);
     }
 
-    public static AST NewSubtree(NodeKind kind, String value, VariableType type, AST... children) {
-        AST node = new AST(kind, value, type);
-        for (AST child : children) {
-            node.AddChild(child);
-        }
+    public void AddMaster(AST ast) {
+        this.master = ast;
+    }
 
-        return node;
+    public AST GetMaster() {
+        return this.master;
     }
 
     //#region Variable hashmap
@@ -57,6 +70,10 @@ public class AST {
         return variableMap.get(name);
     }
     //#endregion
+
+    public void PrintVars() {
+        variableMap.forEach((key, value) -> System.out.printf("Key: %s\n", key));
+    }
 
     public void Print(int i) {
         if (kind == NodeKind.PROGRAM_NODE) {
@@ -83,6 +100,11 @@ public class AST {
             PrintDotValue("VALUE_NODE", i);
         }
 
+        if (kind == NodeKind.VALUE_ARRAY_NODE) {
+            PrintDotValue("VALUE_ARRAY_NODE", i);
+            PrintChildren(i+1);
+        }
+
         if (kind == NodeKind.FUNCTION_CALL_NODE) {
             PrintDotValue("FUNCTION_CALL_NODE", i);
             PrintChildren(i+1);
@@ -90,6 +112,11 @@ public class AST {
 
         if (kind == NodeKind.VAR_USE_NODE) {
             PrintDotValue("VAR_USE_NODE", i);
+        }
+
+        if (kind == NodeKind.FOR_DECLARATION_NODE) {
+            System.out.printf("%s[FOR_DECLARATION_NODE]\n", Tabs(i));
+            PrintChildren(i+1);
         }
     }
 

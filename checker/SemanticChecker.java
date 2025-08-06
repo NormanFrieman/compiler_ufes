@@ -122,6 +122,8 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     @Override
     public AST visitScope(jvmParser.ScopeContext ctx) {
         AST scope = new AST(NodeKind.SCOPE_NODE, null, null);
+        scope.AddMaster(this.lastAst);
+
         this.lastAst = scope;
 
         List<CommandContext> commands = ctx.command();
@@ -369,6 +371,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Visit Composite values
     @Override
     public AST visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
+        // TO DO - Retornar VALUE_ARRAY_NODE
         if (ctx.size != null)
             visit(ctx.size);
 
@@ -384,11 +387,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         visit(ctx.type());
         VariableType typeArray = this.lastType;
 
+        List<AST> children = new ArrayList();
         ctx.values.forEach(value -> {
-            visit(value);
+            AST child = visit(value);
             VariableType valueType = this.lastType;
 
             this.TypeCompare(typeArray, valueType);
+            children.add(child);
         });
 
         // If size is value type, set maxSize of array
@@ -403,11 +408,21 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         
         typeArray.setIsArray(true);
         this.lastType = typeArray;
-        return null;
+
+        AST ast = new AST(NodeKind.VALUE_ARRAY_NODE, null, typeArray);
+        ast.AddChild(children);
+        return ast;
     }
 
     @Override
     public AST visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
+        // TO DO
+        // ADICIONAR VALIDAÇÃO SEMANTICA
+        // ADICIONAR RETORNO NÓ VAR USE (talvez um nó especifico pra array?)
+
+        Token varToken = ctx.ID().getSymbol();
+        Variable var = this.CheckVar(varToken);
+        VariableType varType = var.getType();
         return null;
     }
 
@@ -418,10 +433,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         return null;
         // TO DO
         // VERIFY TYPE CONVERSIONS
+        // ADICIONAR NODE PARA CONVERSÃO
     }
 
     @Override
     public AST visitValueProp(jvmParser.ValuePropContext ctx) {
+        // TO DO
         return null;
     }
     //#endregion
@@ -664,14 +681,25 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitFor_stmt(jvmParser.For_stmtContext ctx) {
+        // Salva a AST anterior
         AST last = this.lastAst;
 
-        AST scopeFor = new AST(NodeKind.SCOPE_NODE, null, null);
-        this.lastAst = scopeFor;
-        
-        visit(ctx.for_declaration());
-        visit(ctx.scope());
+        // Cria uma AST para a declaração do for
+        AST forDecl = new AST(NodeKind.FOR_DECLARATION_NODE, null, null);
 
+        // Mantem temporariamente a AST do for declaration no lastAst
+        this.lastAst = forDecl;
+
+        // Adiciona a AST salva anteriormente como master da AST do for declaration
+        // Necessário para realizar a consulta da tabela de variaveis das ASTs superiores
+        forDecl.AddMaster(last);
+        visit(ctx.for_declaration());
+        
+        AST scopeFor = visit(ctx.scope());
+        forDecl.AddChild(scopeFor);
+
+        // Retorna com a AST anterior
+        this.lastAst = last;
         return scopeFor;
     }
     //#endregion
@@ -693,11 +721,25 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     Variable CheckVar(Token token) {
         String varName = token.getText();
 
-        Variable var = this.lastAst.GetVar(varName);
+        Variable var = CheckVar(this.lastAst, varName);
+
         if (var == null)
             ExitWithError("ERROR: undefined " + varName + " in line " + token.getLine());
 
         return var;
+    }
+
+    Variable CheckVar(AST scope, String varName) {
+        Variable var = scope.GetVar(varName);
+        
+        if (var != null)
+            return var;
+        
+        AST master = scope.GetMaster();
+        if (master == null)
+            return null;
+        
+        return CheckVar(master, varName);
     }
 
     void TypeCompare(VariableType type0, VariableType type1) {
