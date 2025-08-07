@@ -1,1 +1,30 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] ([-1]string) frutas
+				[VALUE_ARRAY_NODE] ([-1]string) null
+					[VALUE_NODE] (string) "maçã"
+					[VALUE_NODE] (string) "banana"
+					[VALUE_NODE] (string) "kiwi"
+					[VALUE_NODE] (string) "laranja"
+			[FOR_DECLARATION_NODE]
+				[VAR_ASSIGN_NODE] (int) idx
+				[VAR_ASSIGN_NODE] (string) fruta
+				[VAR_USE_NODE] ([-1]string) frutas
+				[SCOPE_NODE]
+					[IF_DECLARATION_NODE]
+						[COMPARE_NODE] (void) ==
+							[VAR_USE_NODE] (string) fruta
+							[VALUE_NODE] (string) "kiwi"
+						[SCOPE_NODE]
+							[CONTINUE_NODE]
+					[IF_DECLARATION_NODE]
+						[COMPARE_NODE] (void) >=
+							[VAR_USE_NODE] (int) idx
+							[VALUE_NODE] (int) 2
+						[SCOPE_NODE]
+							[BREAK_NODE]
+					[FUNCTION_CALL_NODE] (void) Println
+						[VALUE_NODE] (string) "Fruta:"
+						[VAR_USE_NODE] (string) fruta
 PARSE SUCCESSFUL!

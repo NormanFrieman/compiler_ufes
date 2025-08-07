@@ -3,6 +3,14 @@
 		[SCOPE_NODE]
 			[VAR_ASSIGN_NODE] ([-1]string) s
 				[VALUE_ARRAY_NODE] ([-1]string) null
+			[VAR_UPDATE_NODE] ([-1]string) s
+				[FUNCTION_CALL_NODE] ([-1]string) append
+					[VAR_USE_NODE] ([-1]string) s
+					[VALUE_NODE] (string) "go"
+			[VAR_UPDATE_NODE] ([-1]string) s
+				[FUNCTION_CALL_NODE] ([-1]string) append
+					[VAR_USE_NODE] ([-1]string) s
+					[VALUE_NODE] (string) "python"
 			[FUNCTION_CALL_NODE] (void) Printf
 				[VALUE_NODE] (string) "Slice: %v (len=%d cap=%d)\n"
 				[VAR_USE_NODE] ([-1]string) s

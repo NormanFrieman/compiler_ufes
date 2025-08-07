@@ -1,1 +1,118 @@
+BATEU AQUI
+BATEU AQUI
+BATEU AQUI
+BATEU AQUI
+BATEU AQUI
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (int) dobro
+		[VAR_ASSIGN_NODE] (int) x
+		[SCOPE_NODE]
+			[RETURN_NODE] (void) null
+				[MATH_NODE] (void) *
+					[VAR_USE_NODE] (int) x
+					[VALUE_NODE] (int) 2
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (int) a
+				[VALUE_NODE] (int) 10
+			[VAR_ASSIGN_NODE] (float64) b
+				[VALUE_NODE] (float32) 3.14
+			[VAR_ASSIGN_NODE] (string) c
+				[VALUE_NODE] (string) "Olá"
+			[VAR_ASSIGN_NODE] (bool) d
+				[VALUE_NODE] (bool) true
+			[VAR_ASSIGN_NODE] (int) e
+				[VALUE_NODE] (int) 5
+			[VAR_ASSIGN_NODE] (float32) f
+				[VALUE_NODE] (float32) 2.5
+			[VAR_ASSIGN_NODE] (string) g
+				[VALUE_NODE] (string) "Mundo"
+			[VAR_ASSIGN_NODE] (bool) h
+				[VALUE_NODE] (bool) false
+			[VAR_ASSIGN_NODE] (int) soma
+				[MATH_NODE] (void) +
+					[VAR_USE_NODE] (int) a
+					[VAR_USE_NODE] (int) e
+			[VAR_ASSIGN_NODE] (int) produto
+				[MATH_NODE] (void) *
+					[CONVERSION_NODE] (int) null
+						[VAR_USE_NODE] (float64) b
+					[VAR_USE_NODE] (int) a
+			[VAR_ASSIGN_NODE] (float64) divisao
+				[MATH_NODE] (void) /
+					[VAR_USE_NODE] (float64) b
+					[CONVERSION_NODE] (float64) null
+						[VAR_USE_NODE] (int) e
+			[VAR_ASSIGN_NODE] (int) resto
+				[MATH_NODE] (void) %
+					[VAR_USE_NODE] (int) a
+					[VAR_USE_NODE] (int) e
+			[VAR_ASSIGN_NODE] (bool) igual
+				[COMPARE_NODE] (void) ==
+					[VAR_USE_NODE] (int) a
+					[VAR_USE_NODE] (int) e
+			[VAR_ASSIGN_NODE] (bool) maior
+				[COMPARE_NODE] (void) >
+					[VAR_USE_NODE] (int) a
+					[VAR_USE_NODE] (int) e
+			[VAR_ASSIGN_NODE] (bool) logico
+				[COMPARE_NODE] (void) &&
+					[VAR_USE_NODE] (bool) d
+					[VAR_USE_NODE] (bool) h
+			[VAR_ASSIGN_NODE] (int) resultadoDobro
+				[FUNCTION_CALL_NODE] (int) dobro
+					[VAR_USE_NODE] (int) a
+			[VAR_ASSIGN_NODE] ([3]int) numeros
+				[VALUE_ARRAY_NODE] ([3]int) null
+					[VALUE_NODE] (int) 1
+					[VALUE_NODE] (int) 2
+					[VALUE_NODE] (int) 3
+			[VAR_ASSIGN_NODE] ([-1]string) nomes
+				[VALUE_ARRAY_NODE] ([-1]string) null
+					[VALUE_NODE] (string) "Ana"
+					[VALUE_NODE] (string) "Bob"
+					[VALUE_NODE] (string) "Carlos"
+			[VAR_ASSIGN_NODE] (float32) PI
+				[VALUE_NODE] (float32) 3.1415
+			[VAR_ASSIGN_NODE] (void) nomeMaiusculo
+				[FUNCTION_CALL_NODE] (void) ToUpper
+					[VAR_USE_NODE] (string) c
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Variáveis básicas:"
+				[VAR_USE_NODE] (int) a
+				[VAR_USE_NODE] (float64) b
+				[VAR_USE_NODE] (string) c
+				[VAR_USE_NODE] (bool) d
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Inferência:"
+				[VAR_USE_NODE] (int) e
+				[VAR_USE_NODE] (float32) f
+				[VAR_USE_NODE] (string) g
+				[VAR_USE_NODE] (bool) h
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Operações matemáticas:"
+				[VAR_USE_NODE] (int) soma
+				[VAR_USE_NODE] (int) produto
+				[VAR_USE_NODE] (float64) divisao
+				[VAR_USE_NODE] (int) resto
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Operações lógicas:"
+				[VAR_USE_NODE] (bool) igual
+				[VAR_USE_NODE] (bool) maior
+				[VAR_USE_NODE] (bool) logico
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Resultado de função:"
+				[VAR_USE_NODE] (int) resultadoDobro
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Array:"
+				[VAR_USE_NODE] ([3]int) numeros
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Slice:"
+				[VAR_USE_NODE] ([-1]string) nomes
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Constante:"
+				[VAR_USE_NODE] (float32) PI
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Strings manipuladas:"
+				[VAR_USE_NODE] (void) nomeMaiusculo
 PARSE SUCCESSFUL!
