@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.Token;
+import org.w3c.dom.Node;
+
 import ast.AST;
 import ast.NodeKind;
 import generated.jvmParser;
@@ -417,10 +419,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitValueArrayGet(jvmParser.ValueArrayGetContext ctx) {
-        // TO DO
-        // ADICIONAR VALIDAÇÃO SEMANTICA
-        // ADICIONAR RETORNO NÓ VAR USE (talvez um nó especifico pra array?)
-
         Token varToken = ctx.ID().getSymbol();
         Variable var = this.CheckVar(varToken);
         VariableType varType = var.getType();
@@ -438,11 +436,14 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         
         if (!varType.IsArray)
             ExitWithError("ERROR: variable is not an array");
+
+        if (exprAst.kind == NodeKind.VALUE_NODE && (varType.getMaxSize() - 1) < Integer.parseInt(value))
+            ExitWithError("ERROR: index out of bounds");
         
-        // if (value != null && (varType.getMaxSize() - 1) < Integer.parseInt(value))
-        //     ExitWithError("ERROR: index out of bounds");
-        
-        return new AST(NodeKind.VAR_ARRAY_USE_NODE, var.getName(), varType);
+        AST varArrayUse = new AST(NodeKind.VAR_ARRAY_USE_NODE, var.getName(), varType);
+        varArrayUse.AddChild(exprAst);
+
+        return varArrayUse;
     }
 
     @Override
@@ -716,9 +717,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Variable lastVarDeclaration = lastAst.GetVar(lastVar.getText());
         JvmType type = lastVarDeclaration.getType().getType();
 
-        // Index of For Range
         lastAst.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
-        // Iter of For Range
         lastAst.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
 
         return null;
@@ -814,7 +813,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         if (!varType.IsNumeric())
             ExitWithError("ERROR: invalid operation in non-numeric type");
     }
-
     //#endregion
     //#region Function
     FunctionDeclaration CheckFunction(Token token) {
