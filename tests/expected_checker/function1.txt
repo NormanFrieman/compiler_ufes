@@ -1,0 +1,13 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (int) function
+		[VAR_ASSIGN_NODE] (int) x
+		[SCOPE_NODE]
+			[RETURN_NODE] (void) null
+				[MATH_NODE] (void) *
+					[VAR_USE_NODE] (int) x
+					[VALUE_NODE] (int) 2
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Hello World"
+PARSE SUCCESSFUL!
