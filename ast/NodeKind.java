@@ -5,7 +5,10 @@ public enum NodeKind {
 
     FUNCTION_DECLARATION_NODE,
     FOR_DECLARATION_NODE,
+
     IF_DECLARATION_NODE,
+    ELSE_IF_DECLARATION_NODE,
+    ELSE_DECLARATION_NODE,
 
     SCOPE_NODE,
 
@@ -22,4 +25,6 @@ public enum NodeKind {
 
     COMPARE_NODE,
     INCREASE_NODE,
+    MATH_NODE,
+    NOT_NODE,
 }

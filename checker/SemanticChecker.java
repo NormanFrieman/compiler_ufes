@@ -169,6 +169,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     public AST visitExprId(jvmParser.ExprIdContext ctx) {
         Token id = ctx.ID().getSymbol();
         Variable var = this.CheckVar(id);
+        this.lastType = var.getType();
 
         return new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
     }
@@ -191,15 +192,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitExprMath(jvmParser.ExprMathContext ctx) {
-        visit(ctx.expr(0));
+        AST expr0 = visit(ctx.expr(0));
         VariableType type0 = this.lastType;
 
-        visit(ctx.expr(1));
+        AST expr1 = visit(ctx.expr(1));
         VariableType type1 = this.lastType;
 
         this.TypeCompare(type0, type1);
         this.lastType = type0;
-        return null;
+
+        AST mathNode = new AST(NodeKind.MATH_NODE, ctx.math_operations().getText(), null);
+        mathNode.AddChild(expr0, expr1);
+
+        return mathNode;
     }
 
     @Override
@@ -221,7 +226,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitExprNotBool(jvmParser.ExprNotBoolContext ctx) {
-        visit(ctx.expr());
+        AST exprAst = visit(ctx.expr());
         VariableType var = this.lastType;
 
         if (var.getType() != JvmType.BOOL) {
@@ -230,7 +235,10 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             ExitWithError("ERROR: type " + nameType + "is not boolean");
         }
 
-        return null;
+        AST notNode = new AST(NodeKind.NOT_NODE, null, null);
+        notNode.AddChild(exprAst);
+
+        return notNode;
     }
     //#endregion
 
@@ -427,6 +435,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Token varToken = ctx.ID().getSymbol();
         Variable var = this.CheckVar(varToken);
         VariableType varType = var.getType();
+        this.lastType = varType;
 
         AST exprAst = visit(ctx.expr());
         String value = exprAst.GetValue();
@@ -785,22 +794,50 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         List<Else_if_stmtContext> elseIf = ctx.else_if_stmt();
         if (elseIf != null) {
             for (Else_if_stmtContext elseIfSingle : elseIf) {
-                visit(elseIfSingle);
+                AST elseIfStmt = visit(elseIfSingle);
+                ifDecl.AddChild(elseIfStmt);
             }
         }
 
-        if (ctx.else_stmt() != null)
-            visit(ctx.else_stmt());
+        if (ctx.else_stmt() != null) {
+            AST elseStmt = visit(ctx.else_stmt());
+            ifDecl.AddChild(elseStmt);
+        }
 
         this.lastAst = last;
         return ifDecl;
     }
-    //#endregion
 
-    //#region GOTO
+    @Override
+    public AST visitElse_if_stmt(jvmParser.Else_if_stmtContext ctx) {
+        AST last = this.lastAst;
+                
+        AST elseIfDecl = new AST(NodeKind.ELSE_IF_DECLARATION_NODE, null, null);
+        this.lastAst = elseIfDecl;
+        elseIfDecl.AddMaster(last);
 
-    // TO DO
+        visit(ctx.if_init());
+        AST elseIfScope = visit(ctx.scope());
+        elseIfDecl.AddChild(elseIfScope);
 
+        this.lastAst = last;
+        return elseIfDecl;
+    }
+
+    @Override
+    public AST visitElse_stmt(jvmParser.Else_stmtContext ctx) {
+        AST last = this.lastAst;
+                
+        AST elseDecl = new AST(NodeKind.ELSE_DECLARATION_NODE, null, null);
+        this.lastAst = elseDecl;
+        elseDecl.AddMaster(last);
+
+        AST elseScope = visit(ctx.scope());
+        elseDecl.AddChild(elseScope);
+
+        this.lastAst = last;
+        return elseDecl;
+    }
     //#endregion
 
     //#region Auxiliary methods

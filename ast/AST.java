@@ -145,6 +145,16 @@ public class AST {
             PrintChildren(i+1);
         }
 
+        if (kind == NodeKind.ELSE_IF_DECLARATION_NODE) {
+            System.out.printf("%s[ELSE_IF_DECLARATION_NODE]\n", Tabs(i));
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.ELSE_DECLARATION_NODE) {
+            System.out.printf("%s[ELSE_DECLARATION_NODE]\n", Tabs(i));
+            PrintChildren(i+1);
+        }
+
         if (kind == NodeKind.COMPARE_NODE) {
             PrintDotValue("COMPARE_NODE", i);
             PrintChildren(i+1);
