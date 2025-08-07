@@ -1,6 +1,5 @@
 package ast;
 
-import java.nio.file.WatchEvent.Kind;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,12 +26,25 @@ public class AST {
         return value;
     }
 
+    public VariableType GetType() {
+        return type;
+    }
+
     public void AddChild(AST child) {
         if (child == null)
             return;
             
         child.AddMaster(this);
         children.add(child);
+    }
+
+    public void AddChild(AST... childs) {
+        if (childs == null)
+            return;
+        
+        for (AST child : childs) {
+            AddChild(child);
+        }
     }
 
     public void AddChild(List<AST> childs) {
@@ -42,6 +54,10 @@ public class AST {
         for (AST child : childs) {
             AddChild(child);
         }
+    }
+
+    public List<AST> GetChilds() {
+        return children;
     }
 
     public AST GetChild(int index) {
@@ -114,8 +130,23 @@ public class AST {
             PrintDotValue("VAR_USE_NODE", i);
         }
 
+        if (kind == NodeKind.VAR_ARRAY_USE_NODE) {
+            PrintDotValue("VAR_ARRAY_USE_NODE", i);
+            PrintChildren(i+1);
+        }
+
         if (kind == NodeKind.FOR_DECLARATION_NODE) {
             System.out.printf("%s[FOR_DECLARATION_NODE]\n", Tabs(i));
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.COMPARE_NODE) {
+            PrintDotValue("COMPARE_NODE", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.INCREASE_NODE) {
+            PrintDotValue("INCREASE_NODE", i);
             PrintChildren(i+1);
         }
     }

@@ -174,9 +174,9 @@ for_range:
 ;
 
 for_declaration:
-    FOR for_cond
-    | FOR for_init SEMICOLON for_cond SEMICOLON for_end
-    | FOR for_range
+    FOR for_cond #forCond
+    | FOR for_init SEMICOLON for_cond SEMICOLON for_end #forClassic
+    | FOR for_range #forRange
 ;
 
 for_stmt:

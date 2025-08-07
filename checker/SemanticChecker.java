@@ -17,6 +17,7 @@ import generated.jvmParser.TypeContext;
 import generated.jvmParserBaseVisitor;
 import checker.utils.ArraySize;
 import checker.utils.FunctionDeclaration;
+import checker.utils.Increase;
 import checker.utils.JvmType;
 import checker.utils.Variable;
 import checker.utils.VariableType;
@@ -423,7 +424,25 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Token varToken = ctx.ID().getSymbol();
         Variable var = this.CheckVar(varToken);
         VariableType varType = var.getType();
-        return null;
+
+        AST exprAst = visit(ctx.expr());
+        String value = exprAst.GetValue();
+        VariableType type = exprAst.GetType();
+        
+        if (!type.IsNumeric())
+            ExitWithError("ERROR: index type must be int");
+        
+        JvmType jvmType = type.getType();
+        if (jvmType == JvmType.FLOAT32 || jvmType == JvmType.FLOAT64)
+            ExitWithError("ERROR: index type must be int");
+        
+        if (!varType.IsArray)
+            ExitWithError("ERROR: variable is not an array");
+        
+        // if (value != null && (varType.getMaxSize() - 1) < Integer.parseInt(value))
+        //     ExitWithError("ERROR: index out of bounds");
+        
+        return new AST(NodeKind.VAR_ARRAY_USE_NODE, var.getName(), varType);
     }
 
     @Override
@@ -506,7 +525,12 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Variable var = this.CheckVar(ctx.ID().getSymbol());
         this.CheckIncrease(var);
 
-        return null;
+        Increase increaseType = ctx.value_increase().PLUS() != null ? Increase.PLUS : Increase.MINUS;
+        AST increaseAst = new AST(NodeKind.INCREASE_NODE, increaseType.toString(), null);
+        AST varAst = new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
+        increaseAst.AddChild(varAst);
+
+        return increaseAst;
     }
     //#endregion
 
@@ -613,11 +637,17 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Loop
     @Override
     public AST visitFor_init(jvmParser.For_initContext ctx) {
-        Token var = ctx.ID().getSymbol();
-        visit(ctx.value());
-        VariableType type = this.lastType;
+        Token varToken = ctx.ID().getSymbol();
+        AST valueAst = visit(ctx.value());
 
-        lastAst.AddVar(new Variable(var.getText(), var.getLine(), type));
+        VariableType type = this.lastType;
+        Variable var = new Variable(varToken.getText(), varToken.getLine(), type);
+        
+        lastAst.AddVar(var);
+        
+        AST varAssignAst = new AST(NodeKind.VAR_ASSIGN_NODE, var.getName(), var.getType());
+        varAssignAst.AddChild(valueAst);
+        lastAst.AddChild(varAssignAst);
 
         return null;
     }
@@ -628,20 +658,28 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Variable var = this.CheckVar(token);
         VariableType type = null;
 
+        AST varAst = new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
+        AST valueAst = null;
+
         if (ctx.value() != null) {
-            visit(ctx.value());
+            valueAst = visit(ctx.value());
             type = this.lastType;
         }
         if (ctx.ID(1) != null) {
-            visit(ctx.ID(1));
+            valueAst = visit(ctx.ID(1));
             type = this.lastType;
         }
         if (ctx.function_call() != null) {
-            visit(ctx.function_call());
+            valueAst = visit(ctx.function_call());
             type = this.lastType;
         }
 
         this.TypeCompare(var.getType(), type);
+
+        AST compare = new AST(NodeKind.COMPARE_NODE, ctx.compare().getText(), null);
+        compare.AddChild(varAst, valueAst);
+
+        this.lastAst.AddChild(compare);
         return null;
     }
 
@@ -649,7 +687,14 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     public AST visitFor_end(jvmParser.For_endContext ctx) {
         Variable var = this.CheckVar(ctx.ID().getSymbol());
         this.CheckIncrease(var);
+
+        Increase increaseType = ctx.value_increase().PLUS() != null ? Increase.PLUS : Increase.MINUS;
+        AST increaseAst = new AST(NodeKind.INCREASE_NODE, increaseType.toString(), null);
+        AST varAst = new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
+        increaseAst.AddChild(varAst);
         
+        this.lastAst.AddChild(increaseAst);
+
         return null;
     }
 
@@ -700,7 +745,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
         // Retorna com a AST anterior
         this.lastAst = last;
-        return scopeFor;
+        return forDecl;
     }
     //#endregion
 
