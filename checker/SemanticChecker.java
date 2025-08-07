@@ -706,20 +706,23 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             .map(x -> x.getSymbol())
             .collect(Collectors.toList());
         
-        Token indexVar = vars.get(0);
-        Token iterVar = vars.get(1);        
-        Token lastVar = vars.get(2);
+        Token indexVarToken = vars.get(0);
+        Token iterVarToken = vars.get(1);        
+        Token lastVarToken = vars.get(2);
         
-        boolean isDeclared = lastAst.VarIsDeclared(lastVar.getText());
-        if (!isDeclared)
-            ExitWithError("ERROR: undefined " + lastVar.getText() + " in line " + lastVar.getLine());
+        Variable lastVar = this.CheckVar(lastVarToken);
+        JvmType type = lastVar.getType().getType();
 
-        Variable lastVarDeclaration = lastAst.GetVar(lastVar.getText());
-        JvmType type = lastVarDeclaration.getType().getType();
+        Variable indexVar = new Variable(indexVarToken.getText(), indexVarToken.getLine(), new VariableType(JvmType.INT));
+        lastAst.AddVar(indexVar);
+        Variable iterVar = new Variable(iterVarToken.getText(), iterVarToken.getLine(), new VariableType(type));
+        lastAst.AddVar(iterVar);
 
-        lastAst.AddVar(new Variable(indexVar.getText(), indexVar.getLine(), new VariableType(JvmType.INT)));
-        lastAst.AddVar(new Variable(iterVar.getText(), iterVar.getLine(), new VariableType(type)));
+        AST indexAst = new AST(NodeKind.VAR_ASSIGN_NODE, indexVar.getName(), indexVar.getType());
+        AST iterAst = new AST(NodeKind.VAR_ASSIGN_NODE, iterVar.getName(), iterVar.getType());
+        AST lastVarAst = new AST(NodeKind.VAR_USE_NODE, lastVar.getName(), lastVar.getType());
 
+        lastAst.AddChild(indexAst, iterAst, lastVarAst);
         return null;
     }
 
