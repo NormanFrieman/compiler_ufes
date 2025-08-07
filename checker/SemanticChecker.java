@@ -132,6 +132,16 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
         List<CommandContext> commands = ctx.command();
         for (CommandContext command : commands) {
+            if (command.CONTINUE() != null) {
+                AST cont = new AST(NodeKind.CONTINUE_NODE, null, null);
+                scope.AddChild(cont);
+            }
+
+            if (command.BREAK() != null) {
+                AST br = new AST(NodeKind.BREAK_NODE, null, null);
+                scope.AddChild(br);
+            }
+
             AST child = visit(command);
             if (child != null)
                 scope.AddChild(child);
@@ -387,7 +397,6 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#region Visit Composite values
     @Override
     public AST visitValueArrayInit(jvmParser.ValueArrayInitContext ctx) {
-        // TO DO - Retornar VALUE_ARRAY_NODE
         if (ctx.size != null)
             visit(ctx.size);
 
@@ -462,12 +471,15 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitValueConversion(jvmParser.ValueConversionContext ctx) {
-        visit(ctx.expr());
-        visit(ctx.type());
-        return null;
+        AST exprAst = visit(ctx.expr());
+        AST typeAst = visit(ctx.type());
+
+        AST conversionAst = new AST(NodeKind.CONVERSION_NODE, null, this.lastType);
+        conversionAst.AddChild(exprAst);
+
+        return conversionAst;
         // TO DO
         // VERIFY TYPE CONVERSIONS
-        // ADICIONAR NODE PARA CONVERSÃO
     }
 
     @Override
@@ -522,12 +534,15 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             varAst = new AST(NodeKind.VAR_ASSIGN_NODE, var.getName(), var.getType());
             varAst.AddChild(value);
         } else if (isVarUpdate) {
-            Variable var = this.CheckVar(varInicialize); 
-            visit(ctx.expr());
+            Variable var = this.CheckVar(varInicialize);
+            AST varUpdate = new AST(NodeKind.VAR_UPDATE_NODE, var.getName(), var.getType());
+            AST exprAst = visit(ctx.expr());
+            varUpdate.AddChild(exprAst);
+
             VariableType assignType = this.lastType;
 
             this.TypeCompare(var.getType(), assignType);
-            varAst = new AST(NodeKind.VAR_UPDATE_NODE, var.getName(), var.getType());
+            varAst = varUpdate;
         }
 
         if (varAst == null)

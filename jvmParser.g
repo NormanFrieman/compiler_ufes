@@ -42,7 +42,7 @@ command:
     | if_stmt
     
     | CONTINUE
-    | BREAK ID?
+    | BREAK
     | goto_init
     | goto_call
 ;

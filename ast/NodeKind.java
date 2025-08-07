@@ -28,4 +28,8 @@ public enum NodeKind {
     MATH_NODE,
     NOT_NODE,
     RETURN_NODE,
+
+    CONTINUE_NODE,
+    BREAK_NODE,
+    CONVERSION_NODE,
 }

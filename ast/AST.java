@@ -112,6 +112,11 @@ public class AST {
             PrintChildren(i+1);
         }
 
+        if (kind == NodeKind.VAR_UPDATE_NODE) {
+            PrintDotValue("VAR_UPDATE_NODE", i);
+            PrintChildren(i+1);
+        }
+
         if (kind == NodeKind.VALUE_NODE) {
             PrintDotValue("VALUE_NODE", i);
         }
@@ -178,6 +183,19 @@ public class AST {
         if (kind == NodeKind.RETURN_NODE) {
             PrintDotValue("RETURN_NODE", i);
             PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.CONVERSION_NODE) {
+            PrintDotValue("CONVERSION_NODE", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.CONTINUE_NODE) {
+            System.out.printf("%s[CONTINUE_NODE]\n", Tabs(i));
+        }
+
+        if (kind == NodeKind.BREAK_NODE) {
+            System.out.printf("%s[BREAK_NODE]\n", Tabs(i));
         }
     }
 

@@ -8,7 +8,7 @@ func main() {
 
     // for sem inicialização e pós, equivale a while (n > 0)
     for n > 0 {
-        resultado *= n+1
+        resultado = resultado * n + 1
         n-- // decrementa
     }
 
