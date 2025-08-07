@@ -5,6 +5,7 @@ public enum NodeKind {
 
     FUNCTION_DECLARATION_NODE,
     FOR_DECLARATION_NODE,
+    IF_DECLARATION_NODE,
 
     SCOPE_NODE,
 
@@ -18,8 +19,6 @@ public enum NodeKind {
     VALUE_ARRAY_NODE,
 
     FUNCTION_CALL_NODE,
-
-    LOOP_NODE,
 
     COMPARE_NODE,
     INCREASE_NODE,

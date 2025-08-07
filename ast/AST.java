@@ -140,6 +140,11 @@ public class AST {
             PrintChildren(i+1);
         }
 
+        if (kind == NodeKind.IF_DECLARATION_NODE) {
+            System.out.printf("%s[IF_DECLARATION_NODE]\n", Tabs(i));
+            PrintChildren(i+1);
+        }
+
         if (kind == NodeKind.COMPARE_NODE) {
             PrintDotValue("COMPARE_NODE", i);
             PrintChildren(i+1);

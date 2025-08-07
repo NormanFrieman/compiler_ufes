@@ -16,6 +16,7 @@ import generated.jvmParser.CommandContext;
 import generated.jvmParser.ExprValueContext;
 import generated.jvmParser.Function_stmtContext;
 import generated.jvmParser.TypeContext;
+import generated.jvmParser.Else_if_stmtContext;
 import generated.jvmParserBaseVisitor;
 import checker.utils.ArraySize;
 import checker.utils.FunctionDeclaration;
@@ -203,15 +204,19 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
 
     @Override
     public AST visitExprBool(jvmParser.ExprBoolContext ctx) {
-        visit(ctx.expr(0));
+        AST value1 = visit(ctx.expr(0));
         VariableType type0 = this.lastType;
 
-        visit(ctx.expr(1));
+        AST value2 = visit(ctx.expr(1));
         VariableType type1 = this.lastType;
 
         this.TypeCompare(type0, type1);
         this.lastType = new VariableType(JvmType.BOOL);
-        return null;
+
+        AST compare = new AST(NodeKind.COMPARE_NODE, ctx.compare().getText(), null);
+        compare.AddChild(value1, value2);
+
+        return compare;
     }
 
     @Override
@@ -752,9 +757,44 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     //#endregion
 
     //#region Conditional
-    
-    // TO DO
+    @Override
+    public AST visitIfSimple(jvmParser.IfSimpleContext ctx) {
+        AST exprAst = visit(ctx.expr());
+        if (exprAst == null)
+            return null;
+        
+        if (this.lastType.getType() != JvmType.BOOL)
+            ExitWithError("ERROR: condition is not bool");
+        
+        this.lastAst.AddChild(exprAst);
+        return null;
+    }
 
+    @Override
+    public AST visitIf_stmt(jvmParser.If_stmtContext ctx) {
+        AST last = this.lastAst;
+
+        AST ifDecl = new AST(NodeKind.IF_DECLARATION_NODE, null, null);
+        this.lastAst = ifDecl;
+        ifDecl.AddMaster(last);
+
+        visit(ctx.if_init());
+        AST ifScope = visit(ctx.scope());
+        ifDecl.AddChild(ifScope);
+
+        List<Else_if_stmtContext> elseIf = ctx.else_if_stmt();
+        if (elseIf != null) {
+            for (Else_if_stmtContext elseIfSingle : elseIf) {
+                visit(elseIfSingle);
+            }
+        }
+
+        if (ctx.else_stmt() != null)
+            visit(ctx.else_stmt());
+
+        this.lastAst = last;
+        return ifDecl;
+    }
     //#endregion
 
     //#region GOTO
