@@ -559,6 +559,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         VariableType functionType = ctx.functionType != null ? this.lastType : null;
 
         AST scope = new AST(NodeKind.FUNCTION_DECLARATION_NODE, functionName, functionType);
+        this.lastAst = scope;
 
         List<Token> ids = ctx.ids;
         List<TypeContext> types = ctx.types;
@@ -569,9 +570,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
             String varName = ids.get(i).getText();
             visit(types.get(i));
             VariableType type = this.lastType;
+            Variable paramVar = new Variable(varName, ids.get(i).getLine(), type);
 
-            scope.AddVar(new Variable(varName, ids.get(i).getLine(), type));
+            AST paramAst = new AST(NodeKind.VAR_ASSIGN_NODE, paramVar.getName(), type);
+            scope.AddVar(paramVar);
             paramsType.add(type);
+
+            scope.AddChild(paramAst);
         }
 
         FunctionDeclaration function = new FunctionDeclaration(
@@ -641,11 +646,13 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     
     @Override
     public AST visitReturn_stmt(jvmParser.Return_stmtContext ctx) {
+        AST returnStmt = new AST(NodeKind.RETURN_NODE, null, null);
         if (ctx.expr() == null)
             return null;
         
-        visit(ctx.expr());
-        return null;
+        AST exprAst = visit(ctx.expr());
+        returnStmt.AddChild(exprAst);
+        return returnStmt;
     }
     //#endregion
 

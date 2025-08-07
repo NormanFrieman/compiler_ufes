@@ -27,4 +27,5 @@ public enum NodeKind {
     INCREASE_NODE,
     MATH_NODE,
     NOT_NODE,
+    RETURN_NODE,
 }

@@ -164,6 +164,21 @@ public class AST {
             PrintDotValue("INCREASE_NODE", i);
             PrintChildren(i+1);
         }
+
+        if (kind == NodeKind.MATH_NODE) {
+            PrintDotValue("MATH_NODE", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.NOT_NODE) {
+            PrintDotValue("NOT_NODE", i);
+            PrintChildren(i+1);
+        }
+
+        if (kind == NodeKind.RETURN_NODE) {
+            PrintDotValue("RETURN_NODE", i);
+            PrintChildren(i+1);
+        }
     }
 
     public void PrintDotValue(String node, int i) {

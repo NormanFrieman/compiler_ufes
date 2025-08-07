@@ -1,1 +1,31 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (int) idade
+				[VALUE_NODE] (int) 20
+			[VAR_ASSIGN_NODE] (bool) temCarteira
+				[VALUE_NODE] (bool) true
+			[IF_DECLARATION_NODE]
+				[COMPARE_NODE] (void) &&
+					[COMPARE_NODE] (void) >=
+						[VAR_USE_NODE] (int) idade
+						[VALUE_NODE] (int) 18
+					[VAR_USE_NODE] (bool) temCarteira
+				[SCOPE_NODE]
+					[FUNCTION_CALL_NODE] (void) Println
+						[VALUE_NODE] (string) "Pode dirigir legalmente"
+				[ELSE_IF_DECLARATION_NODE]
+					[COMPARE_NODE] (void) &&
+						[COMPARE_NODE] (void) >=
+							[VAR_USE_NODE] (int) idade
+							[VALUE_NODE] (int) 18
+						[NOT_NODE] (void) null
+							[VAR_USE_NODE] (bool) temCarteira
+					[SCOPE_NODE]
+						[FUNCTION_CALL_NODE] (void) Println
+							[VALUE_NODE] (string) "Maior de idade, mas sem carteira"
+				[ELSE_DECLARATION_NODE]
+					[SCOPE_NODE]
+						[FUNCTION_CALL_NODE] (void) Println
+							[VALUE_NODE] (string) "Menor de idade"
 PARSE SUCCESSFUL!
