@@ -1,1 +1,16 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (float32) x
+				[VALUE_NODE] (float32) 123.78
+			[VAR_ASSIGN_NODE] (float32) y
+				[VALUE_NODE] (float32) 3123.4
+			[FUNCTION_CALL_NODE] (void) Printf
+				[VALUE_NODE] (string) "Type: %T, value: %v\n"
+				[VAR_USE_NODE] (float32) x
+				[VAR_USE_NODE] (float32) x
+			[FUNCTION_CALL_NODE] (void) Printf
+				[VALUE_NODE] (string) "Type: %T, value: %v\n"
+				[VAR_USE_NODE] (float32) y
+				[VAR_USE_NODE] (float32) y
 PARSE SUCCESSFUL!

@@ -1,1 +1,15 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[FOR_DECLARATION_NODE]
+				[VAR_ASSIGN_NODE] (int) i
+					[VALUE_NODE] (int) 1
+				[COMPARE_NODE] (void) <=
+					[VAR_USE_NODE] (int) i
+					[VALUE_NODE] (int) 5
+				[INCREASE_NODE] (void) PLUS
+					[VAR_USE_NODE] (int) i
+				[SCOPE_NODE]
+					[FUNCTION_CALL_NODE] (void) Println
+						[VAR_USE_NODE] (int) i
 PARSE SUCCESSFUL!

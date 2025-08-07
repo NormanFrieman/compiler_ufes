@@ -1,1 +1,30 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] ([5]int) a
+				[VALUE_ARRAY_NODE] ([5]int) null
+					[VALUE_NODE] (int) 10
+					[VALUE_NODE] (int) 20
+					[VALUE_NODE] (int) 30
+					[VALUE_NODE] (int) 40
+					[VALUE_NODE] (int) 50
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Terceiro elemento:"
+				[VAR_ARRAY_USE_NODE] ([5]int) a
+					[VALUE_NODE] (int) 2
+			[FOR_DECLARATION_NODE]
+				[VAR_ASSIGN_NODE] (int) i
+					[VALUE_NODE] (int) 0
+				[COMPARE_NODE] (void) <
+					[VAR_USE_NODE] (int) i
+					[FUNCTION_CALL_NODE] (int) len
+						[VAR_USE_NODE] ([5]int) a
+				[INCREASE_NODE] (void) PLUS
+					[VAR_USE_NODE] (int) i
+				[SCOPE_NODE]
+					[FUNCTION_CALL_NODE] (void) Printf
+						[VALUE_NODE] (string) "a[%d] = %d\n"
+						[VAR_USE_NODE] (int) i
+						[VAR_ARRAY_USE_NODE] ([5]int) a
+							[VAR_USE_NODE] (int) i
 PARSE SUCCESSFUL!

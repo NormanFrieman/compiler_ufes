@@ -1,1 +1,6 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[FUNCTION_CALL_NODE] (void) Println
+				[VALUE_NODE] (string) "Hello, World!"
 PARSE SUCCESSFUL!

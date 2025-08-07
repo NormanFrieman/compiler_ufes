@@ -1,1 +1,10 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (float32) a
+				[VALUE_NODE] (int) 1
+			[INCREASE_NODE] (void) PLUS
+				[VAR_USE_NODE] (float32) a
+			[FUNCTION_CALL_NODE] (void) Println
+				[VAR_USE_NODE] (float32) a
 PARSE SUCCESSFUL!

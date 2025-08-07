@@ -1,1 +1,9 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (float32) a
+				[VALUE_NODE] (float32) 3.4E+38
+			[FUNCTION_CALL_NODE] (void) Printf
+				[VALUE_NODE] (string) "The type of myVar is: %T\n"
+				[VAR_USE_NODE] (float32) a
 PARSE SUCCESSFUL!
