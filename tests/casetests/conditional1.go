@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-    resultado := 5
+    resultado := 7
 
     // if simples: só executa se resultado for maior que 5
     if resultado > 5 {
