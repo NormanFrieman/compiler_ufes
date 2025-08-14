@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.Token;
-import org.w3c.dom.Node;
 
 import ast.AST;
 import ast.NodeKind;
@@ -27,8 +26,6 @@ import checker.utils.VariableType;
 
 public class SemanticChecker extends jvmParserBaseVisitor<AST> {
     // Scopes
-    // private LinkedList<Scope> scopes = new LinkedList<Scope>();
-    // private Scope lastScope;
     AST root;
     private AST lastAst;
 

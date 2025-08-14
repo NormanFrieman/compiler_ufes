@@ -51,6 +51,10 @@ parserGui:
 run:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE)
 
+# Interpreta a AST
+interpreter:
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE) interpreter
+
 # Remove os arquivos gerados
 clean:
 	@rm -rf ${GEN_PATH} ${BIN_PATH}

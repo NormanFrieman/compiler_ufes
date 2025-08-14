@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import ast.AST;
 import generated.jvmLexer;
 import generated.jvmParser;
-
+import interpreter.Interpreter;
 import checker.SemanticChecker;
 
 public class Main {
@@ -27,9 +27,13 @@ public class Main {
         SemanticChecker checker = new SemanticChecker();
         AST astTree = checker.visit(tree);
 
-        astTree.Print(0);
-
-        System.out.println("PARSE SUCCESSFUL!");
+        if (args.length == 1) {
+            astTree.Print(0);
+            System.out.println("PARSE SUCCESSFUL!");
+        } else if ("interpreter".equals(args[1])) {
+            Interpreter interpreter = new Interpreter();
+            interpreter.EvalProgram(astTree);
+        }    
         // checker.printTables();
     }
 }
