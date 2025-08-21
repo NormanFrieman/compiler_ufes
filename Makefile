@@ -5,10 +5,13 @@ JAVA=java
 ROOT:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 ANTLR_PATH=${ROOT}/tools/antlr-4.13.2-complete.jar
+JASMIN_PATH=${ROOT}/tools/jasmin.jar
 
 CLASS_PATH_OPTION=-cp .:${ANTLR_PATH}
 
 ANTLR4=${JAVA} -jar ${ANTLR_PATH}
+
+JASMIN=${JAVA} -jar ${JASMIN_PATH}
 
 GRUN=${JAVA} ${CLASS_PATH_OPTION} org.antlr.v4.gui.TestRig
 
@@ -52,8 +55,17 @@ run:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE)
 
 # Interpreta a AST
+.PHONY: interpreter
 interpreter:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE) interpreter
+
+# Codegen
+.PHONY: codegen
+codegen:
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE) codegen > Program.j; \
+	$(JASMIN) Program.j; \
+	$(JAVA) Program; \
+	exit 0; \
 
 # Remove os arquivos gerados
 clean:

@@ -15,6 +15,21 @@ public class AST {
     private AST master;
     private List<AST> children = new ArrayList<AST>();
 
+    //#region Variable hashmap
+    private HashMap<String, Variable> variableMap = new HashMap<String, Variable>();
+    public boolean VarIsDeclared(String varName) {
+        return this.GetVar(varName) != null;
+    }
+
+    public void AddVar(Variable var) {
+        variableMap.put(var.Name, var);
+    }
+
+    public Variable GetVar(String name) {
+        return variableMap.get(name);
+    }
+    //#endregion
+
     public AST(NodeKind kind, String value, VariableType type) {
         this.kind = kind;
         this.value = value;
@@ -71,21 +86,6 @@ public class AST {
     public AST GetMaster() {
         return this.master;
     }
-
-    //#region Variable hashmap
-    private HashMap<String, Variable> variableMap = new HashMap<String, Variable>();
-    public boolean VarIsDeclared(String varName) {
-        return this.GetVar(varName) != null;
-    }
-
-    public void AddVar(Variable var) {
-        variableMap.put(var.Name, var);
-    }
-
-    public Variable GetVar(String name) {
-        return variableMap.get(name);
-    }
-    //#endregion
 
     public void PrintVars() {
         variableMap.forEach((key, value) -> System.out.printf("Key: %s\n", key));

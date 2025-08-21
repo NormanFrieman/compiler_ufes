@@ -10,6 +10,7 @@ import generated.jvmLexer;
 import generated.jvmParser;
 import interpreter.Interpreter;
 import checker.SemanticChecker;
+import codegen.CodegenVisitor;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -33,7 +34,11 @@ public class Main {
         } else if ("interpreter".equals(args[1])) {
             Interpreter interpreter = new Interpreter();
             interpreter.EvalProgram(astTree);
-        }    
+        } else if ("codegen".equals(args[1])) {
+            CodegenVisitor codegen = new CodegenVisitor();
+            String code = codegen.Generate(astTree);
+            System.out.println(code);
+        }
         // checker.printTables();
     }
 }
