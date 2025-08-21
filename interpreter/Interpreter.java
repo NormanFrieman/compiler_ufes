@@ -23,7 +23,7 @@ public class Interpreter {
 
     public String VisitChild(AST ast) {
         switch (ast.kind) {
-            case NodeKind.FUNCTION_DECLARATION_NODE -> {
+            case FUNCTION_DECLARATION_NODE -> {
                 AST master = ast.GetMaster();
                 if (master.kind != NodeKind.PROGRAM_NODE)
                     ExitWithError("ERROR: function declared in wrong place");
@@ -34,16 +34,16 @@ public class Interpreter {
                 VisitChilds(ast);
             }
 
-            case NodeKind.FUNCTION_CALL_NODE -> {
+            case FUNCTION_CALL_NODE -> {
                 if ("Println".equals(ast.value)) {
                     String value = VisitChild(ast.GetChild(0));
                     System.out.println(value);
                 }
             }
 
-            case NodeKind.SCOPE_NODE -> VisitChilds(ast);
+            case SCOPE_NODE -> VisitChilds(ast);
 
-            case NodeKind.VAR_ASSIGN_NODE -> {
+            case VAR_ASSIGN_NODE -> {
                 String name = ast.GetValue();
                 VariableType type = ast.GetType();
 
@@ -56,7 +56,7 @@ public class Interpreter {
                 }
             }
 
-            case NodeKind.IF_DECLARATION_NODE -> {
+            case IF_DECLARATION_NODE -> {
                 List<AST> childs = ast.GetChilds();
 
                 boolean compareRes = Boolean.valueOf(VisitChild(childs.get(0)));
@@ -64,7 +64,7 @@ public class Interpreter {
                     VisitChild(childs.get(1));
             }
 
-            case NodeKind.COMPARE_NODE -> {
+            case COMPARE_NODE -> {
                 List<String> results = VisitChilds(ast);
                 
                 String res1 = results.get(0);
@@ -78,12 +78,12 @@ public class Interpreter {
                 return String.valueOf(res1.equals(res2));
             }
 
-            case NodeKind.VAR_USE_NODE -> {
+            case VAR_USE_NODE -> {
                 Variable var = GetVariable(ast.value);
                 return memory.get(var);
             }
 
-            case NodeKind.VALUE_NODE -> {
+            case VALUE_NODE -> {
                 return ast.value;
             }
             
