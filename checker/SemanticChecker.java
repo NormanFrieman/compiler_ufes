@@ -552,7 +552,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         Variable var = this.CheckVar(ctx.ID().getSymbol());
         this.CheckIncrease(var);
 
-        Increase increaseType = ctx.value_increase().PLUS() != null ? Increase.PLUS : Increase.MINUS;
+        Increase increaseType = !ctx.value_increase().PLUS().isEmpty() ? Increase.PLUS : Increase.MINUS;
         AST increaseAst = new AST(NodeKind.INCREASE_NODE, increaseType.toString(), null);
         AST varAst = new AST(NodeKind.VAR_USE_NODE, var.getName(), var.getType());
         increaseAst.AddChild(varAst);
