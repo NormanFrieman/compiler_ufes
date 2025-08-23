@@ -32,3 +32,6 @@ make run FILE=<FILENAME>.go
 
 ## Checker
 ```cd tests && bash test_checker.sh```
+
+## Codegen
+```cd tests && bash test_codegen.sh```

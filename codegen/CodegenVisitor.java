@@ -44,6 +44,8 @@ public class CodegenVisitor {
     }
 
     private void VisitChild(AST ast) {
+        if (ast == null)
+            return;
         switch (ast.kind) {
             case FUNCTION_DECLARATION_NODE -> {
                 AST master = ast.GetMaster();
@@ -60,7 +62,7 @@ public class CodegenVisitor {
             case FUNCTION_CALL_NODE -> {
                 if ("Println".equals(ast.value)) {
                     jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-                    AST valueNode = ast.GetChildByNodeKind(NodeKind.VALUE_NODE);
+                    AST valueNode = ast.GetChild(0);
 
                     VisitChild(valueNode);
                     JvmType type = valueNode.type.getType();
