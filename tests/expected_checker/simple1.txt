@@ -1,0 +1,8 @@
+[PROGRAM_NODE]
+	[FUNCTION_DECLARATION_NODE] (void) main
+		[SCOPE_NODE]
+			[VAR_ASSIGN_NODE] (int) a
+				[VALUE_NODE] (int) 1
+			[FUNCTION_CALL_NODE] (void) Println
+				[VAR_USE_NODE] (int) a
+PARSE SUCCESSFUL!
