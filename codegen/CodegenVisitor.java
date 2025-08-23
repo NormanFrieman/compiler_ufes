@@ -132,11 +132,30 @@ public class CodegenVisitor {
 
                 VisitChild(scopeNode);
 
+                if (elseNode != null) {
+                    jasminCode.append("    ELSE:\n");
+                    VisitChild(elseNode);
+                }
+
                 jasminCode.append("    END:\n");
+                break;
+            }
+
+            case ELSE_DECLARATION_NODE -> {
+                VisitChilds(ast);
+                break;
+            }
+
+            case MATH_NODE -> {
+                VisitChilds(ast);
+                if ("%".equals(ast.value)) {
+                    jasminCode.append("    irem\n");
+                }
+                break;
             }
             
             default -> {
-                ExitWithError("NOT IMPLEMENTED YET");
+                // ExitWithError("NOT IMPLEMENTED YET");
                 break;
             }
         }
