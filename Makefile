@@ -25,6 +25,8 @@ IN=${ROOT}/tests/casetests
 
 GEN_PATH=generated
 
+COMPILED_PATH=compiled
+
 BIN_PATH=bin
 
 all: antlr javac
@@ -62,9 +64,9 @@ interpreter:
 # Codegen
 .PHONY: codegen
 codegen:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE) codegen > Program.j; \
-	$(JASMIN) Program.j; \
-	$(JAVA) Program; \
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(IN)/$(FILE) codegen > $(COMPILED_PATH)/Program.j; \
+	$(JASMIN) -d $(COMPILED_PATH) $(COMPILED_PATH)/Program.j; \
+	$(JAVA) -cp $(COMPILED_PATH) Program; \
 	exit 0; \
 
 # Remove os arquivos gerados
