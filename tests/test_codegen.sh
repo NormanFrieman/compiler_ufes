@@ -2,8 +2,8 @@
 
 ROOT="$(cd .. && cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANTLR_PATH=$ROOT/tools/antlr-4.13.2-complete.jar
-CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 JASMIN_PATH=$ROOT/tools/jasmin.jar
+CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 
 GRAMMAR_NAME=jvm
 GEN_PATH=$ROOT/generated
@@ -34,7 +34,12 @@ for infile in `ls $IN/*.go`; do
     outfile=$TEST/${name}_test.j
     expected=$TEST/${name}.j
     echo Running $base
-    if java $CLASS_PATH_OPTION:$BIN_PATH Main $infile codegen > $outfile | java -jar $JASMIN_PATH -d $TEST $outfile | java -cp $TEST Program | diff -w $outfile $expected; then
+
+    java $CLASS_PATH_OPTION:$BIN_PATH Main $infile codegen > $outfile
+    java -jar $JASMIN_PATH -d $TEST $outfile
+    java -cp $TEST Program
+
+    if diff -w $outfile $expected; then
         echo -e $base ${GREEN}success${NC}
     else
         echo -e $base ${RED}error${NC}
@@ -51,4 +56,4 @@ else
     echo -e ${GREEN}All tests passed${NC}
 fi
 
-rm -rf Program.class
+rm -rf $TEST/Program.class
