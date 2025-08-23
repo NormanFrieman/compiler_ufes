@@ -34,7 +34,7 @@ for infile in `ls $IN/*.go`; do
     outfile=$TEST/${name}_test.j
     expected=$TEST/${name}.j
     echo Running $base
-    if java $CLASS_PATH_OPTION:$BIN_PATH Main $infile codegen > $outfile | java -jar $JASMIN_PATH -d $TEST Program | java -cp $TEST Program | diff -w $outfile $expected; then
+    if java $CLASS_PATH_OPTION:$BIN_PATH Main $infile codegen > $outfile | java -jar $JASMIN_PATH -d $TEST $outfile | java -cp $TEST Program | diff -w $outfile $expected; then
         echo -e $base ${GREEN}success${NC}
     else
         echo -e $base ${RED}error${NC}

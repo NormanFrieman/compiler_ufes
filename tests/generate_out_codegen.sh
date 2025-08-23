@@ -19,7 +19,7 @@ for infile in `ls $IN/*.go`; do
     outfile=$TEST/${name}.j
     echo Running $base
     java $CLASS_PATH_OPTION:$BIN_PATH Main $infile codegen > $outfile
-    java -jar $JASMIN_PATH -d $TEST Program
+    java -jar $JASMIN_PATH -d $TEST $outfile
     java -cp $TEST Program
 done
 
