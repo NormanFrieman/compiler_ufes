@@ -1,16 +1,10 @@
 package codegen;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import ast.AST;
 import ast.NodeKind;
 import checker.utils.Variable;
-import checker.utils.VariableType;
-import checker.utils.JvmType;
 
 public class CodegenVisitor {
     private StringBuilder jasminCode = new StringBuilder();
@@ -44,10 +38,10 @@ public class CodegenVisitor {
         if (rooAst.kind != NodeKind.PROGRAM_NODE)
             ExitWithError("ERROR: invalid root");
 
-        VisitChilds(rooAst);
+        VisitChilds(rooAst, 1);
     }
 
-    private void VisitChild(AST ast) {
+    private void VisitChild(AST ast, int tab) {
         switch (ast.kind) {
             case FUNCTION_DECLARATION_NODE -> {
                 AST master = ast.GetMaster();
@@ -57,39 +51,43 @@ public class CodegenVisitor {
                 if (!"main".equals(ast.value))
                     break;
                 
-                VisitChilds(ast);
+                VisitChilds(ast, tab++);
                 break;
             }
 
             case FUNCTION_CALL_NODE -> {
                 if ("Println".equals(ast.value)) {
-                    jasminCode.append("   getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-                    jasminCode.append("   iload " + 0 + "\n");
-                    jasminCode.append("   invokevirtual java/io/PrintStream/println(I)V\n");
+                    jasminCode.append(Tabs(tab) + "getstatic java/lang/System/out Ljava/io/PrintStream;\n");
+                    VisitChild(ast.GetChild(0), tab++);
+                    // jasminCode.append(Tabs(tab) + "iload " + 0 + "\n");
+                    jasminCode.append(Tabs(tab) + "invokevirtual java/io/PrintStream/println(I)V\n");
                 }
             }
 
-            case SCOPE_NODE -> VisitChilds(ast);
+            case SCOPE_NODE -> VisitChilds(ast, tab++);
 
             case VAR_ASSIGN_NODE -> {
-                VisitChild(ast.GetChild(0));
+                VisitChild(ast.GetChild(0), tab++);
 
                 AST scope = GetScope(ast);
                 Variable var = scope.GetVar(ast.value);
+                int index = scope.GetIndex(var.getName());
 
-                jasminCode.append("   istore " + 0 + "\n");
+                jasminCode.append(Tabs(tab) + "istore " + index + "\n");
                 break;
             }
 
             case VAR_USE_NODE -> {
                 AST scope = GetScope(ast);
                 Variable var = scope.GetVar(ast.value);
-                jasminCode.append("   iload " + 0 + "\n");
+                int index = scope.GetIndex(var.getName());
+
+                jasminCode.append(Tabs(tab) + "iload " + index + "\n");
             }
 
             case VALUE_NODE -> {
                 if (ast.type.IsNumeric()) {
-                    jasminCode.append("    ldc " + ast.value + "\n");
+                    jasminCode.append(Tabs(tab) + "ldc " + ast.value + "\n");
                 }
 
                 break;
@@ -110,15 +108,23 @@ public class CodegenVisitor {
         return GetScope(root);
     }
 
-    private void VisitChilds(AST ast) {
+    private void VisitChilds(AST ast, int tab) {
         List<AST> childs = ast.GetChilds();
 
         for (AST child : childs)
-            VisitChild(child);
+            VisitChild(child, tab);
     }
 
     void ExitWithError(String err) {
         System.err.println(err);
         System.exit(1);
+    }
+
+    public String Tabs(int i) {
+        String tab = "";
+        for (int j = 0; j < i; j++) {
+            tab = tab.concat("\t");
+        }
+        return tab;
     }
 }

@@ -28,6 +28,11 @@ public class AST {
     public Variable GetVar(String name) {
         return variableMap.get(name);
     }
+
+    public int GetIndex(String name) {
+        List<String> keys = new ArrayList<String>(variableMap.keySet());
+        return keys.indexOf(name);
+    }
     //#endregion
 
     public AST(NodeKind kind, String value, VariableType type) {
