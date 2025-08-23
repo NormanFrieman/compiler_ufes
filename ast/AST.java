@@ -1,7 +1,7 @@
 package ast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import checker.utils.Variable;
 import checker.utils.VariableType;
@@ -16,7 +16,7 @@ public class AST {
     private List<AST> children = new ArrayList<AST>();
 
     //#region Variable hashmap
-    private HashMap<String, Variable> variableMap = new HashMap<String, Variable>();
+    private LinkedHashMap<String, Variable> variableMap = new LinkedHashMap<String, Variable>();
     public boolean VarIsDeclared(String varName) {
         return this.GetVar(varName) != null;
     }
@@ -82,6 +82,15 @@ public class AST {
 
     public AST GetChild(int index) {
         return children.get(index);
+    }
+
+    public AST GetChildByNodeKind(NodeKind kind) {
+        for (AST child : children) {
+            if (child.kind == kind)
+                return child;
+        }
+
+        return null;
     }
 
     public void AddMaster(AST ast) {

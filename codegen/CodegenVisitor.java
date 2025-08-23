@@ -1,9 +1,11 @@
 package codegen;
 
+import java.util.HashMap;
 import java.util.List;
 
 import ast.AST;
 import ast.NodeKind;
+import checker.utils.JvmType;
 import checker.utils.Variable;
 
 public class CodegenVisitor {
@@ -38,10 +40,10 @@ public class CodegenVisitor {
         if (rooAst.kind != NodeKind.PROGRAM_NODE)
             ExitWithError("ERROR: invalid root");
 
-        VisitChilds(rooAst, 1);
+        VisitChilds(rooAst);
     }
 
-    private void VisitChild(AST ast, int tab) {
+    private void VisitChild(AST ast) {
         switch (ast.kind) {
             case FUNCTION_DECLARATION_NODE -> {
                 AST master = ast.GetMaster();
@@ -51,29 +53,40 @@ public class CodegenVisitor {
                 if (!"main".equals(ast.value))
                     break;
                 
-                VisitChilds(ast, tab++);
+                VisitChilds(ast);
                 break;
             }
 
             case FUNCTION_CALL_NODE -> {
                 if ("Println".equals(ast.value)) {
-                    jasminCode.append(Tabs(tab) + "getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-                    VisitChild(ast.GetChild(0), tab++);
-                    // jasminCode.append(Tabs(tab) + "iload " + 0 + "\n");
-                    jasminCode.append(Tabs(tab) + "invokevirtual java/io/PrintStream/println(I)V\n");
+                    jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
+                    AST valueNode = ast.GetChildByNodeKind(NodeKind.VALUE_NODE);
+
+                    VisitChild(valueNode);
+                    JvmType type = valueNode.type.getType();
+
+                    HashMap<JvmType, String> typeJasmin = new HashMap<>();
+                    typeJasmin.put(JvmType.INT, "I");
+                    typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
+
+                    jasminCode.append(
+                        "    invokevirtual java/io/PrintStream/println("
+                        + typeJasmin.get(type)
+                        + ")V\n"
+                    );
                 }
             }
 
-            case SCOPE_NODE -> VisitChilds(ast, tab++);
+            case SCOPE_NODE -> VisitChilds(ast);
 
             case VAR_ASSIGN_NODE -> {
-                VisitChild(ast.GetChild(0), tab++);
+                VisitChild(ast.GetChild(0));
 
                 AST scope = GetScope(ast);
                 Variable var = scope.GetVar(ast.value);
                 int index = scope.GetIndex(var.getName());
 
-                jasminCode.append(Tabs(tab) + "istore " + index + "\n");
+                jasminCode.append("    istore " + index + "\n");
                 break;
             }
 
@@ -82,15 +95,42 @@ public class CodegenVisitor {
                 Variable var = scope.GetVar(ast.value);
                 int index = scope.GetIndex(var.getName());
 
-                jasminCode.append(Tabs(tab) + "iload " + index + "\n");
+                jasminCode.append("    iload " + index + "\n");
             }
 
             case VALUE_NODE -> {
                 if (ast.type.IsNumeric()) {
-                    jasminCode.append(Tabs(tab) + "ldc " + ast.value + "\n");
+                    jasminCode.append("    bipush " + ast.value + "\n");
+                } else {
+                    jasminCode.append("    ldc " + ast.value + "\n");
                 }
 
                 break;
+            }
+
+            case IF_DECLARATION_NODE -> {
+                AST compareNode = ast.GetChildByNodeKind(NodeKind.COMPARE_NODE);
+                AST elseNode = ast.GetChildByNodeKind(NodeKind.ELSE_DECLARATION_NODE);
+                AST scopeNode = ast.GetChildByNodeKind(NodeKind.SCOPE_NODE);
+
+                String label = elseNode != null
+                    ? "ELSE"
+                    : "END";
+
+                VisitChilds(compareNode);
+
+                String compareSymbol = compareNode.value;
+                if (">".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmplt " + label + "\n");
+                } else if ("<".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmpgt " + label + "\n");
+                } else if ("==".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmpeq " + label + "\n");
+                }
+
+                VisitChild(scopeNode);
+
+                jasminCode.append("    END:\n");
             }
             
             default -> {
@@ -108,11 +148,11 @@ public class CodegenVisitor {
         return GetScope(root);
     }
 
-    private void VisitChilds(AST ast, int tab) {
+    private void VisitChilds(AST ast) {
         List<AST> childs = ast.GetChilds();
 
         for (AST child : childs)
-            VisitChild(child, tab);
+            VisitChild(child);
     }
 
     void ExitWithError(String err) {
