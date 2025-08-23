@@ -22,3 +22,5 @@ for infile in `ls $IN/*.go`; do
     java -jar $JASMIN_PATH -d $TEST Program
     java -cp $TEST Program
 done
+
+rm -rf Program.class

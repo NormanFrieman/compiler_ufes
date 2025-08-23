@@ -409,7 +409,7 @@ public class SemanticChecker extends jvmParserBaseVisitor<AST> {
         visit(ctx.type());
         VariableType typeArray = this.lastType;
 
-        List<AST> children = new ArrayList();
+        List<AST> children = new ArrayList<AST>();
         ctx.values.forEach(value -> {
             AST child = visit(value);
             VariableType valueType = this.lastType;
