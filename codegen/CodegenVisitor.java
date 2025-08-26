@@ -11,6 +11,11 @@ import checker.utils.Variable;
 public class CodegenVisitor {
     private StringBuilder jasminCode = new StringBuilder();
 
+    //#region
+    private int countIfEnd = 0;
+    private int countElse = 0;
+    //#endregion
+
     public String Generate(AST rootAst) {
         jasminCode.setLength(0);
         emitHeader();
@@ -112,32 +117,65 @@ public class CodegenVisitor {
 
             case IF_DECLARATION_NODE -> {
                 AST compareNode = ast.GetChildByNodeKind(NodeKind.COMPARE_NODE);
+                List<AST> elseIfNodes = ast.GetChildsByNodeKind(NodeKind.ELSE_IF_DECLARATION_NODE);
                 AST elseNode = ast.GetChildByNodeKind(NodeKind.ELSE_DECLARATION_NODE);
                 AST scopeNode = ast.GetChildByNodeKind(NodeKind.SCOPE_NODE);
 
+                String elseLabel = "ELSE_" + countElse;
+                String endLabel = "END_" + countIfEnd;
                 String label = elseNode != null
-                    ? "ELSE"
-                    : "END";
+                    ? elseLabel
+                    : endLabel;
 
                 VisitChilds(compareNode);
 
                 String compareSymbol = compareNode.value;
-                if (">".equals(compareSymbol)) {
+                if (">".equals(compareSymbol) || ">=".equals(compareSymbol)) {
                     jasminCode.append("    if_icmplt " + label + "\n");
                 } else if ("<".equals(compareSymbol)) {
                     jasminCode.append("    if_icmpgt " + label + "\n");
                 } else if ("==".equals(compareSymbol)) {
-                    jasminCode.append("    if_icmpeq " + label + "\n");
+                    jasminCode.append("    if_icmpne " + label + "\n");
                 }
 
                 VisitChild(scopeNode);
+                jasminCode.append("    goto " + endLabel + "\n");
+
+                for (AST elseIfNode : elseIfNodes) {
+                    countElse++;
+                    String elseIfLabel = "ELSE_" + countElse;
+                    jasminCode.append("    " + elseLabel + ":\n");
+                    
+                    elseLabel = "ELSE_" + countElse;
+
+                    AST elseIfCompareNode = elseIfNode.GetChildByNodeKind(NodeKind.COMPARE_NODE);
+                    AST elseIfScope = elseIfNode.GetChildByNodeKind(NodeKind.SCOPE_NODE);
+
+                    VisitChilds(elseIfCompareNode);
+
+                    String elseIfCompareSymbol = elseIfCompareNode.value;
+                    if (">".equals(elseIfCompareSymbol) || ">=".equals(elseIfCompareSymbol)) {
+                        jasminCode.append("    if_icmplt " + elseIfLabel + "\n");
+                    } else if ("<".equals(elseIfCompareSymbol)) {
+                        jasminCode.append("    if_icmpgt " + elseIfLabel + "\n");
+                    } else if ("==".equals(elseIfCompareSymbol)) {
+                        jasminCode.append("    if_icmpne " + elseIfLabel + "\n");
+                    }
+
+                    VisitChild(elseIfScope);
+                    jasminCode.append("    goto " + endLabel + "\n");
+
+                    elseLabel = "ELSE_" + countElse;
+                } 
 
                 if (elseNode != null) {
-                    jasminCode.append("    ELSE:\n");
+                    jasminCode.append("    " + elseLabel + ":\n");
+                    countElse++;
                     VisitChild(elseNode);
                 }
 
-                jasminCode.append("    END:\n");
+                jasminCode.append("    " + endLabel + ":\n");
+                countIfEnd++;
                 break;
             }
 

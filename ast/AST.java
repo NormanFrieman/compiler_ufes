@@ -2,6 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import checker.utils.Variable;
 import checker.utils.VariableType;
@@ -91,6 +92,16 @@ public class AST {
         }
 
         return null;
+    }
+
+    public List<AST> GetChildsByNodeKind(NodeKind kind) {
+        List<AST> childs = new LinkedList<AST>();
+        for (AST child : children) {
+            if (child.kind == kind)
+                childs.add(child);
+        }
+
+        return childs;
     }
 
     public void AddMaster(AST ast) {
