@@ -9,15 +9,16 @@
     bipush 2
     irem
     bipush 0
-    if_icmpeq ELSE
+    if_icmpne ELSE_0
     getstatic java/lang/System/out Ljava/io/PrintStream;
     ldc "Resultado é par"
     invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-    ELSE:
+    goto END_0
+    ELSE_0:
     getstatic java/lang/System/out Ljava/io/PrintStream;
     ldc "Resultado é ímpar"
     invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-    END:
+    END_0:
     return
 .end method
 
