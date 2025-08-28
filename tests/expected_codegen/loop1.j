@@ -16,6 +16,5 @@
     goto FOR_START_0
     FOR_END_0:
     return
-    return
 .end method
 
