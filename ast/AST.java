@@ -82,6 +82,9 @@ public class AST {
     }
 
     public AST GetChild(int index) {
+        if (children == null || children.isEmpty()) {
+            return null;
+        }
         return children.get(index);
     }
 

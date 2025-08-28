@@ -25,25 +25,12 @@ public class CodegenVisitor {
         jasminCode.setLength(0);
         emitHeader();
         visitProgram(rootAst);
-        emitFooter();
         return jasminCode.toString();
     }
 
     private void emitHeader() {
         jasminCode.append(".class public Program\n");
         jasminCode.append(".super java/lang/Object\n");
-        jasminCode.append(".method public static main([Ljava/lang/String;)V\n");
-        // tamanho da pilha e número de variáveis de que precisamos
-        jasminCode.append("    .limit stack 10\n");
-        // no número de variáveis somamos um por conta do parâmetro de main, que em Java é variável local
-        // jasminCode.append("    .limit locals "+(variables.length+1)+"\n");
-        jasminCode.append("    .limit locals "+(10)+"\n");
-    }
-
-    private void emitFooter() {
-        // terminamos o método main
-        jasminCode.append("    return\n");
-        jasminCode.append(".end method\n");
     }
 
     private void visitProgram(AST rooAst) {
@@ -62,10 +49,21 @@ public class CodegenVisitor {
                 if (master.kind != NodeKind.PROGRAM_NODE)
                     ExitWithError("ERROR: function declared in wrong place");
                 
-                if (!"main".equals(ast.value))
-                    break;
-                
+                String type = "main".equals(ast.value) ? "[Ljava/lang/String;" : JasminType(ast.type.getType());
+                String returnType = "main".equals(ast.value) ? "V" : JasminType(ast.type.getType());
+                jasminCode.append(".method public static " + ast.value + "(" + type + ")" + returnType + "\n");
+                // tamanho da pilha e número de variáveis de que precisamos
+                jasminCode.append("    .limit stack 10\n");
+                // no número de variáveis somamos um por conta do parâmetro de main, que em Java é variável local
+                // jasminCode.append("    .limit locals "+(variables.length+1)+"\n");
+                jasminCode.append("    .limit locals "+(10)+"\n");
+            
                 VisitChilds(ast);
+
+                if ("main".equals(ast.value))
+                    jasminCode.append("    return\n");
+                jasminCode.append(".end method\n");
+
                 break;
             }
 
@@ -76,17 +74,13 @@ public class CodegenVisitor {
                     List<AST> childs = ast.GetChilds();
                     for (AST child : childs) {
                         VisitChild(child);
-                        JvmType type = child.type.getType();
-    
-                        HashMap<JvmType, String> typeJasmin = new HashMap<>();
-                        typeJasmin.put(JvmType.INT, "I");
-                        typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
-    
+                        JvmType type = child.type.getType();    
                         jasminCode.append(
                             "    invokevirtual java/io/PrintStream/println("
-                            + typeJasmin.get(type)
+                            + JasminType(type)
                             + ")V\n");
-                    }                    
+                    }
+                    break;
                 } else if ("Printf".equals(ast.value)) {
                     jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
 
@@ -115,13 +109,27 @@ public class CodegenVisitor {
 
                         jasminCode.append("    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n");
                     }
+                    break;
                 }
+
+                VisitChilds(ast);
+                jasminCode.append("    invokestatic Program/"
+                    + ast.value + "(I)"
+                    + JasminType(ast.type.getType())
+                    + "\n");
+                break;
             }
 
-            case SCOPE_NODE -> VisitChilds(ast);
+            case SCOPE_NODE -> {
+                VisitChilds(ast);
+                break;
+            }
 
             case VAR_ASSIGN_NODE -> {
                 AST child = ast.GetChild(0);
+                if (ast.GetMaster().kind == NodeKind.FUNCTION_DECLARATION_NODE && child == null)
+                    break;
+                
                 VisitChild(child);
 
                 AST scope = GetScope(ast);
@@ -339,6 +347,12 @@ public class CodegenVisitor {
                 break;
             }
             
+            case RETURN_NODE -> {
+                VisitChilds(ast);
+                jasminCode.append("    ireturn\n");
+                break;
+            }
+            
             default -> {
                 // ExitWithError("NOT IMPLEMENTED YET");
                 break;
@@ -354,6 +368,9 @@ public class CodegenVisitor {
         if (root.kind == NodeKind.FOR_DECLARATION_NODE)
             return root;
         
+        if (root.kind == NodeKind.FUNCTION_DECLARATION_NODE)
+            return root;
+        
         if (root.kind == NodeKind.PROGRAM_NODE)
             return null;
         
@@ -361,7 +378,11 @@ public class CodegenVisitor {
     }
 
     Tuple<Variable, AST> GetVarFromMultipleScopes(AST ast, String varName) {
-        if (ast.kind == NodeKind.SCOPE_NODE || ast.kind == NodeKind.FOR_DECLARATION_NODE) {
+        if (
+            ast.kind == NodeKind.SCOPE_NODE
+            || ast.kind == NodeKind.FOR_DECLARATION_NODE
+            || ast.kind == NodeKind.FUNCTION_DECLARATION_NODE
+        ) {
             Variable var = ast.GetVar(varName);
             if (var != null)
                 return new Tuple<Variable, AST>(var, ast);
@@ -380,6 +401,15 @@ public class CodegenVisitor {
         for (AST child : childs) {
             VisitChild(child);
         }
+    }
+
+    private String JasminType(JvmType a) {
+        HashMap<JvmType, String> typeJasmin = new HashMap<>();
+
+        typeJasmin.put(JvmType.INT, "I");
+        typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
+        
+        return typeJasmin.get(a);
     }
 
     void ExitWithError(String err) {
