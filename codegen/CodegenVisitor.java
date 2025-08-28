@@ -82,6 +82,34 @@ public class CodegenVisitor {
                         + typeJasmin.get(type)
                         + ")V\n"
                     );
+                } else if ("Printf".equals(ast.value)) {
+                    jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
+
+                    List<AST> childs = ast.GetChilds();
+                    if (childs.size() > 1) {
+                        int i = 0;
+
+                        for (AST child : childs) {
+                            if (i == 0) {
+                                if (child.value.contains("%")) {
+                                    String value = child.value
+                                        .replaceAll("%d", "")
+                                        .replaceAll("%s", "")
+                                        .replaceAll("\\n", "");
+                                    jasminCode.append("    new java/lang/StringBuilder\n");
+                                    jasminCode.append("    dup\n");
+                                    jasminCode.append("    ldc " + value + "\n");
+                                    jasminCode.append("    invokespecial java/lang/StringBuilder/<init>(Ljava/lang/String;)V\n");
+                                } else {
+                                    VisitChild(child);
+                                    jasminCode.append("    invokevirtual java/lang/StringBuilder/append(I)Ljava/lang/StringBuilder;\n");
+                                    jasminCode.append("    invokevirtual java/lang/StringBuilder/toString()Ljava/lang/String;\n");
+                                }
+                            }
+                        }
+
+                        jasminCode.append("    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n");
+                    }
                 }
             }
 
@@ -193,6 +221,10 @@ public class CodegenVisitor {
                 VisitChilds(ast);
                 if ("%".equals(ast.value)) {
                     jasminCode.append("    irem\n");
+                } else if ("+".equals(ast.value)) {
+                    jasminCode.append("    iadd\n");
+                } else if ("*".equals(ast.value)) {
+                    jasminCode.append("    imul\n");
                 }
                 break;
             }
@@ -226,13 +258,29 @@ public class CodegenVisitor {
 
                 jasminCode.append("    goto " + forStart + "\n");
                 jasminCode.append("    " + forEnd + ":\n");
-                jasminCode.append("    return\n");
+                break;
             }
 
             case INCREASE_NODE -> {
                 if ("PLUS".equals(ast.value)) {
                     jasminCode.append("    iinc 0 1\n");
+                } else if ("MINUS".equals(ast.value)) {
+                    jasminCode.append("    iinc 0 -1\n");
                 }
+                break;
+            }
+
+            case VAR_UPDATE_NODE -> {
+                VisitChilds(ast);
+
+                Tuple<Variable, AST> tuple = GetVarFromMultipleScopes(ast, ast.value);
+                Variable var = tuple.x;
+                AST master = tuple.y;
+                
+                int index = master.GetIndex(var.getName());
+
+                jasminCode.append("    istore " + index + "\n");
+                break;
             }
             
             default -> {
