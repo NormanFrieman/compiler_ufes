@@ -17,9 +17,6 @@
     bipush 1
     iadd
     istore 1
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    iload 1
-    invokevirtual java/io/PrintStream/println(I)V
     iinc 0 -1
     goto FOR_START_0
     FOR_END_0:

@@ -2,11 +2,14 @@ package codegen;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import ast.AST;
 import ast.NodeKind;
 import checker.utils.JvmType;
 import checker.utils.Tuple;
 import checker.utils.Variable;
+import checker.utils.VariableType;
 
 public class CodegenVisitor {
     private StringBuilder jasminCode = new StringBuilder();
@@ -15,6 +18,7 @@ public class CodegenVisitor {
     private int countIfEnd = 0;
     private int countElse = 0;
     private int countFor = 0;
+
     //#endregion
 
     public String Generate(AST rootAst) {
@@ -68,20 +72,21 @@ public class CodegenVisitor {
             case FUNCTION_CALL_NODE -> {
                 if ("Println".equals(ast.value)) {
                     jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
-                    AST valueNode = ast.GetChild(0);
 
-                    VisitChild(valueNode);
-                    JvmType type = valueNode.type.getType();
-
-                    HashMap<JvmType, String> typeJasmin = new HashMap<>();
-                    typeJasmin.put(JvmType.INT, "I");
-                    typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
-
-                    jasminCode.append(
-                        "    invokevirtual java/io/PrintStream/println("
-                        + typeJasmin.get(type)
-                        + ")V\n"
-                    );
+                    List<AST> childs = ast.GetChilds();
+                    for (AST child : childs) {
+                        VisitChild(child);
+                        JvmType type = child.type.getType();
+    
+                        HashMap<JvmType, String> typeJasmin = new HashMap<>();
+                        typeJasmin.put(JvmType.INT, "I");
+                        typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
+    
+                        jasminCode.append(
+                            "    invokevirtual java/io/PrintStream/println("
+                            + typeJasmin.get(type)
+                            + ")V\n");
+                    }                    
                 } else if ("Printf".equals(ast.value)) {
                     jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
 
@@ -116,13 +121,49 @@ public class CodegenVisitor {
             case SCOPE_NODE -> VisitChilds(ast);
 
             case VAR_ASSIGN_NODE -> {
-                VisitChild(ast.GetChild(0));
+                AST child = ast.GetChild(0);
+                VisitChild(child);
 
                 AST scope = GetScope(ast);
                 Variable var = scope.GetVar(ast.value);
                 int index = scope.GetIndex(var.getName());
 
-                jasminCode.append("    istore " + index + "\n");
+                if (!child.type.IsArray)
+                    jasminCode.append("    istore " + index + "\n");
+                break;
+            }
+
+            case VALUE_ARRAY_NODE -> {
+                String varName = ast.GetMaster().value;
+
+                Tuple<Variable, AST> tuple = GetVarFromMultipleScopes(ast, varName);
+                Variable var = tuple.x;
+                AST master = tuple.y;
+                int index = master.GetIndex(var.getName());
+
+                int size = ast.type.getMaxSize();
+                JvmType type = ast.type.getType();
+
+                String typeStr = null;  
+                if (type == JvmType.INT)
+                    typeStr = "int";
+                if (type == JvmType.STRING)
+                    typeStr = "String";
+                
+                jasminCode.append("    bipush " + size + "\n");
+                jasminCode.append("    newarray " + typeStr + "\n");
+                jasminCode.append("    astore " + index + "\n");
+                
+                List<AST> childs = ast.GetChilds();
+                int i = 0;
+                for (AST child : childs) {
+                    jasminCode.append("    aload " + index + "\n");
+                    jasminCode.append("    iconst_" + i + "\n");
+                    jasminCode.append("    bipush " + child.value + "\n");
+                    jasminCode.append("    iastore\n");
+                    i++;
+                }
+
                 break;
             }
 
@@ -136,6 +177,21 @@ public class CodegenVisitor {
                 int index = master.GetIndex(var.getName());
 
                 jasminCode.append("    iload " + index + "\n");
+            }
+
+            case VAR_ARRAY_USE_NODE -> {
+                Tuple<Variable, AST> tuple = GetVarFromMultipleScopes(ast, ast.value);
+                Variable var = tuple.x;
+                AST master = tuple.y;
+
+                String idxVar = ast.GetChild(0).value;
+                
+                int index = master.GetIndex(var.getName());
+
+                jasminCode.append("    aload " + index + "\n");
+                jasminCode.append("    iconst_" + idxVar + "\n");
+                jasminCode.append("    iaload\n");
+                break;
             }
 
             case VALUE_NODE -> {

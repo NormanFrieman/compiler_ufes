@@ -23,6 +23,12 @@ make
 make run FILE=<FILENAME>.go
 ```
 
+## Codegen
+```
+make
+make codegen FILE=<FILENAME>.go
+```
+
 # Run Tests
 ## Scanner
 ```cd tests && bash test_scanner.sh```
