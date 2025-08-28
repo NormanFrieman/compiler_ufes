@@ -49,8 +49,8 @@ public class CodegenVisitor {
                 if (master.kind != NodeKind.PROGRAM_NODE)
                     ExitWithError("ERROR: function declared in wrong place");
                 
-                String type = "main".equals(ast.value) ? "[Ljava/lang/String;" : JasminType(ast.type.getType());
-                String returnType = "main".equals(ast.value) ? "V" : JasminType(ast.type.getType());
+                String type = "main".equals(ast.value) ? "[Ljava/lang/String;" : JasminType(ast.type.getType(), true);
+                String returnType = "main".equals(ast.value) ? "V" : JasminType(ast.type.getType(), true);
                 jasminCode.append(".method public static " + ast.value + "(" + type + ")" + returnType + "\n");
                 // tamanho da pilha e número de variáveis de que precisamos
                 jasminCode.append("    .limit stack 10\n");
@@ -77,7 +77,7 @@ public class CodegenVisitor {
                         JvmType type = child.type.getType();    
                         jasminCode.append(
                             "    invokevirtual java/io/PrintStream/println("
-                            + JasminType(type)
+                            + JasminType(type, true)
                             + ")V\n");
                     }
                     break;
@@ -94,6 +94,7 @@ public class CodegenVisitor {
                                     String value = child.value
                                         .replaceAll("%d", "")
                                         .replaceAll("%s", "")
+                                        .replaceAll("%T", "")
                                         .replaceAll("\\n", "");
                                     jasminCode.append("    new java/lang/StringBuilder\n");
                                     jasminCode.append("    dup\n");
@@ -101,7 +102,7 @@ public class CodegenVisitor {
                                     jasminCode.append("    invokespecial java/lang/StringBuilder/<init>(Ljava/lang/String;)V\n");
                                 } else {
                                     VisitChild(child);
-                                    jasminCode.append("    invokevirtual java/lang/StringBuilder/append(I)Ljava/lang/StringBuilder;\n");
+                                    jasminCode.append("    invokevirtual java/lang/StringBuilder/append(" + JasminType(child.type.getType(), true) + ")Ljava/lang/StringBuilder;\n");
                                     jasminCode.append("    invokevirtual java/lang/StringBuilder/toString()Ljava/lang/String;\n");
                                 }
                             }
@@ -115,7 +116,7 @@ public class CodegenVisitor {
                 VisitChilds(ast);
                 jasminCode.append("    invokestatic Program/"
                     + ast.value + "(I)"
-                    + JasminType(ast.type.getType())
+                    + JasminType(ast.type.getType(), false)
                     + "\n");
                 break;
             }
@@ -137,7 +138,7 @@ public class CodegenVisitor {
                 int index = scope.GetIndex(var.getName());
 
                 if (!child.type.IsArray)
-                    jasminCode.append("    istore " + index + "\n");
+                    jasminCode.append("    " + JasminType(ast.type.getType(), false) + "store " + index + "\n");
                 break;
             }
 
@@ -184,7 +185,7 @@ public class CodegenVisitor {
                 
                 int index = master.GetIndex(var.getName());
 
-                jasminCode.append("    iload " + index + "\n");
+                jasminCode.append("    " + JasminType(ast.type.getType(), false) + "load " + index + "\n");
             }
 
             case VAR_ARRAY_USE_NODE -> {
@@ -204,7 +205,19 @@ public class CodegenVisitor {
 
             case VALUE_NODE -> {
                 if (ast.type.IsNumeric()) {
-                    jasminCode.append("    bipush " + ast.value + "\n");
+                    if (
+                        ast.type.getType() == JvmType.FLOAT32
+                        && ast.value.contains("E+")
+                    ) {
+                        // String[] values = ast.value.split("E+");
+                        // Double value = Double.parseDouble(values[0]);
+                        // value = value + Math.pow(Integer.parseInt(values[1]), 10);
+
+                        jasminCode.append("    ldc2_w " + ast.value + "\n");
+                        // jasminCode.append("    f2d\n");
+                    } else {
+                        jasminCode.append("    bipush " + ast.value + "\n");
+                    }
                 } else {
                     jasminCode.append("    ldc " + ast.value + "\n");
                 }
@@ -403,11 +416,12 @@ public class CodegenVisitor {
         }
     }
 
-    private String JasminType(JvmType a) {
+    private String JasminType(JvmType a, boolean upperCase) {
         HashMap<JvmType, String> typeJasmin = new HashMap<>();
 
-        typeJasmin.put(JvmType.INT, "I");
+        typeJasmin.put(JvmType.INT, upperCase ? "i".toUpperCase() : "i");
         typeJasmin.put(JvmType.STRING, "Ljava/lang/String;");
+        typeJasmin.put(JvmType.FLOAT32, upperCase ? "d".toUpperCase() : "d");
         
         return typeJasmin.get(a);
     }
