@@ -2,10 +2,10 @@ package codegen;
 
 import java.util.HashMap;
 import java.util.List;
-
 import ast.AST;
 import ast.NodeKind;
 import checker.utils.JvmType;
+import checker.utils.Tuple;
 import checker.utils.Variable;
 
 public class CodegenVisitor {
@@ -14,6 +14,7 @@ public class CodegenVisitor {
     //#region
     private int countIfEnd = 0;
     private int countElse = 0;
+    private int countFor = 0;
     //#endregion
 
     public String Generate(AST rootAst) {
@@ -99,8 +100,12 @@ public class CodegenVisitor {
 
             case VAR_USE_NODE -> {
                 AST scope = GetScope(ast);
-                Variable var = scope.GetVar(ast.value);
-                int index = scope.GetIndex(var.getName());
+
+                Tuple<Variable, AST> tuple = GetVarFromMultipleScopes(scope, ast.value);
+                Variable var = tuple.x;
+                AST master = tuple.y;
+                
+                int index = master.GetIndex(var.getName());
 
                 jasminCode.append("    iload " + index + "\n");
             }
@@ -191,6 +196,44 @@ public class CodegenVisitor {
                 }
                 break;
             }
+
+            case FOR_DECLARATION_NODE -> {
+                String forStart = "FOR_START_" + countFor;
+                String forEnd = "FOR_END_" + countFor;
+                countFor++;
+
+                AST varAssignNode = ast.GetChildByNodeKind(NodeKind.VAR_ASSIGN_NODE);
+                AST compareNode = ast.GetChildByNodeKind(NodeKind.COMPARE_NODE);
+                AST increaseNode = ast.GetChildByNodeKind(NodeKind.INCREASE_NODE);
+                AST scopeNode = ast.GetChildByNodeKind(NodeKind.SCOPE_NODE);
+
+                VisitChild(varAssignNode);
+
+                jasminCode.append("    " + forStart + ":\n");
+                VisitChilds(compareNode);
+
+                String compareSymbol = compareNode.value;
+                if (">".equals(compareSymbol) || ">=".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmplt " + forEnd + "\n");
+                } else if ("<".equals(compareSymbol) || "<=".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmpgt " + forEnd + "\n");
+                } else if ("==".equals(compareSymbol)) {
+                    jasminCode.append("    if_icmpne " + forEnd + "\n");
+                }
+
+                VisitChild(scopeNode);
+                VisitChild(increaseNode);
+
+                jasminCode.append("    goto " + forStart + "\n");
+                jasminCode.append("    " + forEnd + ":\n");
+                jasminCode.append("    return\n");
+            }
+
+            case INCREASE_NODE -> {
+                if ("PLUS".equals(ast.value)) {
+                    jasminCode.append("    iinc 0 1\n");
+                }
+            }
             
             default -> {
                 // ExitWithError("NOT IMPLEMENTED YET");
@@ -204,14 +247,35 @@ public class CodegenVisitor {
         if (root.kind == NodeKind.SCOPE_NODE)
             return root;
         
+        if (root.kind == NodeKind.FOR_DECLARATION_NODE)
+            return root;
+        
+        if (root.kind == NodeKind.PROGRAM_NODE)
+            return null;
+        
         return GetScope(root);
+    }
+
+    Tuple<Variable, AST> GetVarFromMultipleScopes(AST ast, String varName) {
+        if (ast.kind == NodeKind.SCOPE_NODE || ast.kind == NodeKind.FOR_DECLARATION_NODE) {
+            Variable var = ast.GetVar(varName);
+            if (var != null)
+                return new Tuple<Variable, AST>(var, ast);
+        }
+
+        AST scope = GetScope(ast);
+        if (scope == null)
+            return null;
+        
+        return GetVarFromMultipleScopes(scope, varName);
     }
 
     private void VisitChilds(AST ast) {
         List<AST> childs = ast.GetChilds();
 
-        for (AST child : childs)
+        for (AST child : childs) {
             VisitChild(child);
+        }
     }
 
     void ExitWithError(String err) {
